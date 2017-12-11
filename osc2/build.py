@@ -3,7 +3,7 @@
 To access the remote build data use the class BuildResult.
 """
 
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 
 from lxml import etree
 

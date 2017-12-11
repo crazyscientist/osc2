@@ -1,6 +1,6 @@
 import os
 import unittest
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 
 from osc2.build import BuildInfo, BuildDependency
 from osc2.fetch import (FilenameCacheManager, NamePreferCacheManager,

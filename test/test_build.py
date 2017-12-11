@@ -1,5 +1,5 @@
 import unittest
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 
 from lxml import etree
 

@@ -1,5 +1,5 @@
 import os
-import cStringIO
+from six.moves import cStringIO as StringIO
 import unittest
 import urllib2
 import shutil
@@ -142,9 +142,9 @@ class MyHTTPHandler(urllib2.HTTPHandler, urllib2.HTTPSHandler):
             raise kwargs['exception']
         if 'text' not in kwargs and 'file' in kwargs:
             filename = os.path.join(self._fixtures_dir, kwargs.pop('file'))
-            f = cStringIO.StringIO(open(filename, 'r').read())
+            f = StringIO(open(filename, 'r').read())
         elif 'text' in kwargs and 'file' not in kwargs:
-            f = cStringIO.StringIO(kwargs.pop('text'))
+            f = StringIO(kwargs.pop('text'))
         else:
             raise ValueError('either specify text or file')
         code = kwargs.pop('code', 200)

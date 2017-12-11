@@ -2,7 +2,7 @@ import unittest
 import os
 import sys
 import tempfile
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 
 from osc2.util.io import TemporaryDirectory, mkdtemp, mkstemp
 from test.osctest import OscTestCase

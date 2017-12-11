@@ -2,3 +2,7 @@ lxml
 pycurl
 urlgrabber
 jinja2
+six
+
+# Testing dependencies
+pytest
