@@ -100,7 +100,7 @@ class Delegator(DynamicDecorator):
         methods.
 
         """
-        super(Delegator, self).__init__(self)
+        super(Delegator, self).__init__()
         if delegate is None:
             raise ValueError('delegate must not be None')
         self._delegate = delegate
