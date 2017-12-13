@@ -7,6 +7,7 @@ This module is mainly inspired by https://github.com/jnicklas/xpath
 (especially the syntax of the DSL).
 
 """
+from functools import wraps
 
 
 def children(minimum, maximum):
@@ -17,6 +18,7 @@ def children(minimum, maximum):
 
     """
     def decorate(f):
+        @wraps(f)
         def checker(self, *args, **kwargs):
             len_children = len(self._children)
             if len_children < minimum:
@@ -27,7 +29,6 @@ def children(minimum, maximum):
                 raise XPathSyntaxError(msg)
             return f(self, *args, **kwargs)
 
-        checker.func_name = f.func_name
         return checker
 
     return decorate
@@ -40,11 +41,11 @@ def no_dummy(f):
     and self is returned.
 
     """
+    @wraps(f)
     def checker(self, expr, *args, **kwargs):
         if isinstance(expr, DummyExpression):
             return self
         return f(self, expr, *args, **kwargs)
-    checker.func_name = f.func_name
     return checker
 
 
@@ -308,6 +309,7 @@ class Tree(object):
 
         """
         def decorator(f):
+            @wraps(f)
             def operation(self, tree):
                 self.tree_mode(True, self)
                 if tree is not None:
@@ -320,7 +322,6 @@ class Tree(object):
                     tree.tree_mode(False, self)
                 for c in self._children:
                     c.tree_mode(False, self)
-            operation.func_name = f.func_name
             return operation
         return decorator
 
@@ -406,12 +407,12 @@ class Expression(Tree):
 
         """
         def decorator(f):
+            @wraps(f)
             def disable(self, *args, **kwargs):
                 if self.is_tree_mode():
                     return NotImplemented
                 return f(self, *args, **kwargs)
 
-            disable.func_name = f.func_name
             return disable
         return decorator
 

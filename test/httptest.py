@@ -1,3 +1,5 @@
+from functools import wraps
+
 import os
 from six import iteritems
 from six.moves import cStringIO as StringIO
@@ -172,12 +174,12 @@ class MyHTTPHandler(urllib_request.HTTPHandler, urllib_request.HTTPSHandler):
 
 def urldecorator(method, fullurl, **kwargs):
     def decorate(test_method):
+        @wraps(test_method)
         def wrapped_test_method(*args):
             add_expected_request(method, fullurl, **kwargs)
             test_method(*args)
         # "rename" method otherwise we cannot specify a TestCaseClass.testName
         # cmdline arg when using unittest.main()
-        wrapped_test_method.__name__ = test_method.__name__
         return wrapped_test_method
     return decorate
 
