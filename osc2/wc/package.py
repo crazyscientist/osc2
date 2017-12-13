@@ -8,6 +8,7 @@ import errno
 from difflib import unified_diff
 
 from lxml import etree
+from six import itervalues, iteritems
 
 from osc2.core import Osc
 from osc2.source import File, Directory, Linkinfo
@@ -407,7 +408,7 @@ class PackageUpdateState(XMLTransactionState, UpdateStateMixin):
         lists = self._lists()
         directory = self._xml.find('directory')
         data = {}
-        for filenames in lists.itervalues():
+        for filenames in itervalues(lists):
             for filename in filenames:
                 elm = directory.find("//entry[@name='%s']" % filename)
                 data[filename] = elm
@@ -807,7 +808,7 @@ class Package(WorkingCopy):
                 msg = "commit policy: unchanged and deleted not disjunct"
                 raise ValueError(msg)
             lists = {'unchanged': unchanged, 'deleted': deleted}
-            for listname, data in lists.iteritems():
+            for listname, data in iteritems(lists):
                 for filename in data:
                     if filename not in filenames:
                         msg = ("commit policy: file \"%s\" isn't tracked"

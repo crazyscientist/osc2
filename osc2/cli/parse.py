@@ -1,6 +1,7 @@
 """Provides methods and classes for parsing the commandline options."""
 
 import os
+from six import iteritems
 
 import argparse
 
@@ -35,7 +36,7 @@ class _OscNamespace(argparse.Namespace):
     def _add_items(self, info):
         """Add parsed items to the info object."""
         if self.func_defaults is not None:
-            for k, v in self.func_defaults.iteritems():
+            for k, v in iteritems(self.func_defaults):
                 info.add(k, v)
         # add options etc. to info object
         for i in self.__dict__.keys():

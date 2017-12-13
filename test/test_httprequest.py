@@ -1,5 +1,7 @@
 import unittest
-import urllib2
+from six.moves.urllib.request import (HTTPBasicAuthHandler,
+                                      HTTPPasswordMgrWithDefaultRealm)
+from six.moves import urllib_error
 
 from lxml import etree
 
@@ -130,24 +132,24 @@ class TestHTTPRequest(OscTest):
         self.assertEqual(resp.headers['x'], '42')
 
     @GET('http://localhost/source',
-         exception=urllib2.HTTPError('http://localhost/source', 403, 'error',
-                                     {}, None))
+         exception=urllib_error.HTTPError('http://localhost/source', 403, 'error',
+                                          {}, None))
     def test12(self):
         """test exception handling (get)"""
         r = Urllib2HTTPRequest('http://localhost', True, '', '', '', False)
         self.assertRaises(HTTPError, r.get, 'source')
 
     @PUT('http://localhost/source', exp='foo bar',
-         exception=urllib2.HTTPError('http://localhost/source', 400, 'error',
-                                     {}, None))
+         exception=urllib_error.HTTPError('http://localhost/source', 400, 'error',
+                                          {}, None))
     def test13(self):
         """test exception handling (put)"""
         r = Urllib2HTTPRequest('http://localhost', True, '', '', '', False)
         self.assertRaises(HTTPError, r.put, 'source', data='foo bar')
 
     @GET('http://localhost/source',
-         exception=urllib2.HTTPError('http://localhost/source', 403, 'error',
-                                     {'foo': 'bar'}, None))
+         exception=urllib_error.HTTPError('http://localhost/source', 403, 'error',
+                                          {'foo': 'bar'}, None))
     def test14(self):
         """test exception handling (check exception object)"""
         r = Urllib2HTTPRequest('http://localhost', True, '', '', '', False)
@@ -298,8 +300,8 @@ class TestHTTPRequest(OscTest):
 
     @staticmethod
     def _setup_ext_basic_auth_handler(url, username, password):
-        authhandler = urllib2.HTTPBasicAuthHandler(
-            urllib2.HTTPPasswordMgrWithDefaultRealm())
+        authhandler = HTTPBasicAuthHandler(
+            HTTPPasswordMgrWithDefaultRealm())
         authhandler.add_password(None, url, username, password)
         return authhandler
 
@@ -330,6 +332,7 @@ class TestHTTPRequest(OscTest):
                                password='bar', handlers=[handler])
         resp = r.get('/test')
         self.assertEqual(resp.read(), 'foo')
+
 
 if __name__ == '__main__':
     unittest.main()

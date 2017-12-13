@@ -23,6 +23,8 @@ import os
 import re
 import logging
 
+from six import iterkeys, iteritems
+
 from osc2.wc.project import Project
 from osc2.wc.package import Package
 from osc2.wc.util import (wc_is_project, wc_is_package, wc_read_project,
@@ -86,7 +88,7 @@ class ResolvedInfo(object):
         return name in self._data
 
     def __iter__(self):
-        return self._data.iterkeys()
+        return iterkeys(self._data)
 
     def __str__(self):
         return str(self._data)
@@ -546,7 +548,7 @@ class OscArgs(object):
 
         """
         unresolved = []
-        for k, v in resolved.iteritems():
+        for k, v in iteritems(resolved):
             if v is None:
                 unresolved.append(k)
             else:

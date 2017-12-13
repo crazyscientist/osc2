@@ -1,7 +1,8 @@
 import os
+from six import iteritems
 from six.moves import cStringIO as StringIO
+from six.moves import urllib_request, urllib_response
 import unittest
-import urllib2
 import shutil
 from difflib import unified_diff
 
@@ -87,13 +88,13 @@ class MyHeaders(dict):
         return [val]
 
 
-class MyHTTPHandler(urllib2.HTTPHandler, urllib2.HTTPSHandler):
+class MyHTTPHandler(urllib_request.HTTPHandler, urllib_request.HTTPSHandler):
     def __init__(self, *args, **kwargs):
         self._exp_requests = kwargs.pop('exp_requests')
         self._fixtures_dir = kwargs.pop('fixtures_dir')
         # XXX: we can't use super because no class in
         # HTTPHandler's inheritance hierarchy extends object
-        urllib2.HTTPHandler.__init__(self, *args, **kwargs)
+        urllib_request.HTTPHandler.__init__(self, *args, **kwargs)
 
     def http_open(self, req):
         r = self._exp_requests.pop(0)
@@ -150,16 +151,16 @@ class MyHTTPHandler(urllib2.HTTPHandler, urllib2.HTTPSHandler):
         code = kwargs.pop('code', 200)
         # everything else in kwargs are response headers
         headers = MyHeaders()
-        for k, v in kwargs.iteritems():
+        for k, v in iteritems(kwargs):
             k = k.replace('_', '-')
             headers[k] = v
-        resp = urllib2.addinfourl(f, headers, req.get_full_url())
+        resp = urllib_response.addinfourl(f, headers, req.get_full_url())
         resp.code = code
         resp.msg = ''
         return resp
 
     def _check_headers(self, req, headers):
-        for hdr, exp_val in headers.iteritems():
+        for hdr, exp_val in iteritems(headers):
             # urllib2 stores the capitalized hdr
             hdr = hdr.capitalize().replace('_', '-')
             val = req.get_header(hdr)
@@ -218,13 +219,13 @@ class MockUrllib2Request(unittest.TestCase):
         global EXPECTED_REQUESTS
         super(MockUrllib2Request, self).setUp()
         EXPECTED_REQUESTS = []
-        self._orig_build_opener = urllib2.build_opener
+        self._orig_build_opener = urllib_request.build_opener
 
         def build_opener(*handlers):
             handlers += (MyHTTPHandler(exp_requests=EXPECTED_REQUESTS,
                                        fixtures_dir=self._fixtures_dir), )
             return self._orig_build_opener(*handlers)
-        urllib2.build_opener = build_opener
+        urllib_request.build_opener = build_opener
         self._tmp_dir = mkdtemp(prefix='osc_test')
         self._tmp_fixtures = os.path.join(self._tmp_dir, 'fixtures')
         shutil.copytree(self._fixtures_dir, self._tmp_fixtures, symlinks=True)
@@ -235,4 +236,4 @@ class MockUrllib2Request(unittest.TestCase):
         self.assertTrue(len(EXPECTED_REQUESTS) == 0)
         # _orig_build_opener should never be None
         if self._orig_build_opener is not None:
-            urllib2.build_opener = self._orig_build_opener
+            urllib_request.build_opener = self._orig_build_opener

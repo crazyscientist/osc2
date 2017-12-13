@@ -13,9 +13,10 @@ Example usage:
 
 import logging
 import os
-from cStringIO import StringIO
+from six.moves import cStringIO
 
 from lxml import etree, objectify
+from six import iteritems
 
 from osc2.core import Osc
 from osc2.httprequest import HTTPError
@@ -62,7 +63,7 @@ class ElementFactory(object):
         """
         # simply creating a new dict is not possible because
         # otherwise our testcases fail (we need an OrderedDict...)
-        remove = [k for k, v in attribs.iteritems() if v is None]
+        remove = [k for k, v in iteritems(attribs) if v is None]
         for k in remove:
             del attribs[k]
 
@@ -493,7 +494,7 @@ class RORemoteFile(object):
     """
 
     def __init__(self, path, stream_bufsize=8192, method='GET',
-                 mtime=None, mode=0644, lazy_open=True, **kwargs):
+                 mtime=None, mode=0o644, lazy_open=True, **kwargs):
         """Constructs a new RemoteFile object.
 
         path is the remote path which is used for the http request.
@@ -633,7 +634,7 @@ class RWRemoteFile(RORemoteFile):
         if self._remote_size >= self.tmp_size or self.use_tmp:
             new_fobj = mkstemp()
         else:
-            new_fobj = StringIO()
+            new_fobj = cStringIO()
         if read_required:
             # we read/write _everything_ (otherwise this class needs
             # a bit more logic - can be added if needed)

@@ -16,6 +16,7 @@ The use-case from above is implemented in the osc2.util.io.mkdtemp function.
 """
 
 import inspect
+from six import iteritems, text_type
 
 
 class DynamicDecorator(object):
@@ -68,7 +69,7 @@ class DynamicDecorator(object):
             elif inspect.ismethod(i):
                 _add_method(meths, i)
                 args.remove(i)
-        for k, v in dict(kwargs).iteritems():
+        for k, v in iteritems(dict(kwargs)):
             if inspect.isfunction(v):
                 _add_function(meths, v, k)
                 del kwargs[k]
@@ -137,7 +138,7 @@ class Delegator(DynamicDecorator):
             setattr(self._delegate, key, val)
 
 
-class StringifiedDelegator(Delegator, unicode):
+class StringifiedDelegator(Delegator, text_type):
     """Represents a delegator that can be treated like a str."""
 
     def __new__(cls, delegate, *args, **kwargs):

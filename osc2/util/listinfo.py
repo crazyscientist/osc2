@@ -4,6 +4,8 @@ It can be used to manage a list consisting of multiple named
 sublists.
 """
 
+from six import iteritems
+
 
 class ListInfo(object):
     """Manage various lists."""
@@ -23,7 +25,7 @@ class ListInfo(object):
         for listname in self._listnames:
             setattr(self, listname, [])
         self._listnames.extend(listdata.keys())
-        for listname, data in listdata.iteritems():
+        for listname, data in iteritems(listdata):
             setattr(self, listname, data)
 
     def append(self, entry, listname):

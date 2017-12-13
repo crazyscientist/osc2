@@ -1,8 +1,8 @@
 import os
 import mmap
 import unittest
-# use StringIO instead of cStringIO because seek will be overridden
-from StringIO import StringIO
+# use BytesIO instead of cBytesIO because seek will be overridden
+from io import BytesIO
 
 from osc2.util.cpio import (FileWrapper, NewAsciiReader, CpioError,
                             NewAsciiWriter, CpioArchive, cpio_open)
@@ -127,7 +127,7 @@ class TestCpio(OscTest):
 
     def test5(self):
         """test FileWrapper with unseekable file object"""
-        sio = StringIO('Simple test file')
+        sio = BytesIO('Simple test file')
         sio.seek = None
         f = FileWrapper(fobj=sio, use_mmap=False)
         self.assertFalse(f.is_seekable())
@@ -153,8 +153,8 @@ class TestCpio(OscTest):
 
     def test6(self):
         """test FileWrapper (invalid arguments)"""
-        sio = StringIO('foo')
-        fname = self.fixture_file('filewrapper1.txt')
+        sio = BytesIO('foo')
+        fname = self.fixture_file(u'filewrapper1.txt')
         self.assertRaises(ValueError, FileWrapper)
         self.assertRaises(ValueError, FileWrapper, filename=fname, fobj=sio)
 
@@ -283,7 +283,7 @@ class TestCpio(OscTest):
         """test NewAsciiReader (unseekable file object)"""
         # identical to test8 but this time a unseekable fobj is used
         fname = self.fixture_file('new_ascii_reader2.cpio')
-        sio = StringIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'r').read())
         sio.seek = None
         f = FileWrapper(fobj=sio)
         archive_reader = NewAsciiReader(f)
@@ -480,7 +480,7 @@ class TestCpio(OscTest):
         # but the expected results are different because the fobj
         # is not seekable
         fname = self.fixture_file('new_ascii_reader3.cpio')
-        sio = StringIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'r').read())
         sio.seek = None
         f = FileWrapper(fobj=sio)
         self.assertFalse(f.is_seekable())
@@ -537,7 +537,7 @@ class TestCpio(OscTest):
         os.mkdir(dest)
         fname = self.fixture_file('new_ascii_reader3.cpio')
         st = os.stat(fname)
-        sio = StringIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'r').read())
         f = FileWrapper(fobj=sio)
         archive_reader = NewAsciiReader(f)
         # copyin file foo
@@ -571,12 +571,12 @@ class TestCpio(OscTest):
         f = FileWrapper(filename=fname)
         archive_reader = NewAsciiReader(f)
         # copyin file foo
-        sio = StringIO()
+        sio = BytesIO()
         archive_file = archive_reader.next_file()
         archive_file.copyin(sio)
         self.assertEqual(sio.getvalue(), 'file foo\n')
         # copyin file foobar
-        sio = StringIO()
+        sio = BytesIO()
         archive_file = archive_reader.next_file()
         archive_file.copyin(sio)
         self.assertEqual(sio.getvalue(), 'This is file\nbar.\n')
@@ -585,9 +585,9 @@ class TestCpio(OscTest):
         """test NewAsciiWriter's append method"""
         fname = self.fixture_file('foo')
         st = os.stat(fname)
-        sio = StringIO()
+        sio = BytesIO()
         archive_writer = NewAsciiWriter(sio)
-        archive_writer.append(fname)
+        archive_writer.append(fname.encode('utf-8'))
         self.assertEqual(archive_writer._bytes_written, 128)
         fname = self.fixture_file('new_ascii_writer_foo_header')
         # we can only compare the sizes because the inode, dev_maj and dev_min
@@ -618,8 +618,8 @@ class TestCpio(OscTest):
     def test19(self):
         """test NewAsciiWriter's append method (fobj)"""
         fname = self.fixture_file('foo')
-        sio_fobj = StringIO(open(fname, 'r').read())
-        sio = StringIO()
+        sio_fobj = BytesIO(open(fname, 'r').read())
+        sio = BytesIO()
         archive_writer = NewAsciiWriter(sio)
         archive_writer.append('foo', fobj=sio_fobj)
         self.assertEqual(archive_writer._bytes_written, 128)
@@ -628,7 +628,7 @@ class TestCpio(OscTest):
 
     def test20(self):
         """test NewAsciiWriter's _append_trailer method"""
-        sio = StringIO()
+        sio = BytesIO()
         archive_writer = NewAsciiWriter(sio)
         archive_writer._append_trailer()
         self.assertEqual(archive_writer._bytes_written, 124)
@@ -638,8 +638,8 @@ class TestCpio(OscTest):
     def test21(self):
         """test NewAsciiWriter's copyout method"""
         fname = self.fixture_file('foo')
-        sio_fobj = StringIO(open(fname, 'r').read())
-        sio = StringIO()
+        sio_fobj = BytesIO(open(fname, 'r').read())
+        sio = BytesIO()
         archive_writer = NewAsciiWriter(sio)
         archive_writer.append('foo', fobj=sio_fobj)
         archive_writer.copyout()
@@ -650,13 +650,13 @@ class TestCpio(OscTest):
     def test22(self):
         """test NewAsciiWriter's copyout method"""
         # write a complete cpio archive
-        f = StringIO()
+        f = BytesIO()
         archive_writer = NewAsciiWriter(f)
-        sio = StringIO('This is a small\ntest file.\n')
+        sio = BytesIO('This is a small\ntest file.\n')
         archive_writer.append('test1', fobj=sio)
-        sio = StringIO('Yet another\ntest file.\n')
+        sio = BytesIO('Yet another\ntest file.\n')
         archive_writer.append('test2', fobj=sio)
-        sio = StringIO('The last test file.\n')
+        sio = BytesIO('The last test file.\n')
         archive_writer.append('last_file', fobj=sio)
         archive_writer.copyout()
         self.assertEqual(archive_writer._bytes_written, 1024)
@@ -688,7 +688,7 @@ class TestCpio(OscTest):
     def test24(self):
         """test CpioArchive class unseekable input 1"""
         fname = self.fixture_file('cpio_archive.cpio')
-        sio = StringIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'r').read())
         sio.seek = None
         archive = CpioArchive(fobj=sio)
         filenames = ['bar', 'file1', 'foo']
@@ -713,7 +713,7 @@ class TestCpio(OscTest):
     def test25(self):
         """test CpioArchive class unseekable input 2"""
         fname = self.fixture_file('cpio_archive.cpio')
-        sio = StringIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'r').read())
         sio.seek = None
         archive = CpioArchive(fobj=sio)
         # get the second file in the archive

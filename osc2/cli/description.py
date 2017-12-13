@@ -15,6 +15,7 @@ import textwrap
 import inspect
 import logging
 import re
+from six import itervalues
 
 import argparse
 
@@ -106,7 +107,7 @@ class AbstractSubcommandFilterMeta(type):
 
         """
         name = base_cls.__name__
-        for v in specialized_cls.cls_map().itervalues():
+        for v in itervalues(specialized_cls.cls_map()):
             names = [base.__name__ for base in v]
             if name in names:
                 i = names.index(name)
@@ -117,7 +118,7 @@ class AbstractSubcommandFilterMeta(type):
     def _append_alias(cls, base_cls, alias_cls):
         """Appends alias_cls to all lists where base_cls is present."""
         name = base_cls.__name__
-        for v in alias_cls.cls_map().itervalues():
+        for v in itervalues(alias_cls.cls_map()):
             names = [base.__name__ for base in v]
             if name in names:
                 v.append(alias_cls)

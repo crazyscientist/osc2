@@ -3,6 +3,8 @@
 import readline
 import subprocess
 
+from six import iteritems
+from six.moves import input
 from osc2.cli import parse
 from osc2.cli.description import build_description, build_command
 
@@ -61,7 +63,7 @@ class AbstractShell(object):
 
         """
         cnt = 0
-        for i in xrange(len(inp)):
+        for i in range(len(inp)):
             if inp[i] != '"':
                 continue
             cnt += 1
@@ -104,10 +106,10 @@ class AbstractShell(object):
         """
         if text:
             self._renderer.render_text(text)
-        inp = raw_input(prompt)
+        inp = input(prompt)
         self._check_input(inp)
         while not self._check_input(inp):
-            inp += "\n" + raw_input()
+            inp += "\n" + input()
         return inp
 
     def render(self, *args, **kwargs):
@@ -208,10 +210,10 @@ class HomogenousRenderableItemStorage(AbstractItemStorage):
         self._renderer = renderer
         self._storage_template = storage_template
         self._items = dict(((k, RenderableItem(renderer, item_template, v))
-                            for k, v in items.iteritems()))
+                            for k, v in iteritems(items)))
 
     def iteritems(self):
-        return self._items.iteritems()
+        return iteritems(self._items)
 
     def __iter__(self):
         return self._items.__iter__()
@@ -271,7 +273,7 @@ class ItemSelector(AbstractShell):
         """Builds a command hierarchy for the items."""
         description_cls = build_description('ItemSelector', {})
         self._root_cmd = build_command(description_cls)
-        for cmd, item in item_storage.iteritems():
+        for cmd, item in iteritems(item_storage):
             attrs = {'cmd': cmd,
                      'help_str': str(item),
                      'func': staticmethod(lambda info: item)}

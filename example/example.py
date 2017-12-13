@@ -15,7 +15,7 @@ example.py ls 1|0 (in working copy)
 
 import os
 import sys
-from ConfigParser import SafeConfigParser
+from six.moves.configparser import SafeConfigParser
 
 from osc2.core import Osc
 from osc2.oscargs import OscArgs

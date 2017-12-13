@@ -3,8 +3,9 @@
 import os
 import inspect
 import logging
-import urlparse
-from ConfigParser import SafeConfigParser
+from six import iteritems
+from six.moves.urllib.parse import urlparse
+from six.moves.configparser import SafeConfigParser
 from collections import Sequence
 
 from osc2.core import Osc
@@ -58,7 +59,7 @@ def _init(apiurl):
                     and cp.getboolean(section, 'keyring')):
                 try:
                     import keyring
-                    host = urlparse.urlparse(apiurl).hostname
+                    host = urlparse(apiurl).hostname
                     password = keyring.get_password(host, user)
                 except ImportError:
                     msg = ("keyring module not available but '%s' "
@@ -129,7 +130,7 @@ def illegal_options(*args, **kwargs):
                 if info.get(opt):
                     msg = parse_illegal_options_doc(f.__doc__) % {'opt': opt}
                     raise ValueError(msg)
-            for opt, value in kwargs.iteritems():
+            for opt, value in iteritems(kwargs):
                 if info.get(opt) != value:
                     msg = parse_illegal_options_doc(f.__doc__) % {'opt': opt}
                     raise ValueError(msg)

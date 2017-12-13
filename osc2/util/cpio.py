@@ -4,7 +4,7 @@ import os
 import mmap
 from struct import pack, unpack
 from collections import namedtuple
-from cStringIO import StringIO
+from six.moves import cStringIO
 
 from osc2.util.io import copy_file, iter_read
 
@@ -379,7 +379,7 @@ class ArchiveWriter(object):
         global TRAILER
         st = self._create_dummy_stat(0, 0, 0, 0, 1, 0, 0, 0, 0)
         hdr = self._create_header(st, TRAILER)
-        self._write_header(hdr, StringIO())
+        self._write_header(hdr, cStringIO())
 
 
 class NewAsciiReader(ArchiveReader):
@@ -498,7 +498,7 @@ class NewAsciiWriter(ArchiveWriter):
             # this is only a good idea if it's a small file but we need
             # to know the size... (alternatively we can pass in an optional
             # filesize argument)
-            source = StringIO(fobj.read())
+            source = cStringIO(fobj.read())
             st = self._create_dummy_stat(0, 33188, 0, 0, 1, os.geteuid(),
                                          os.getegid(), len(source.getvalue()),
                                          0)

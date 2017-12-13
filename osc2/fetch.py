@@ -6,7 +6,7 @@ and to fetch build dependencies from the api or a mirror.
 import os
 from collections import namedtuple
 
-import urlparse
+from six.moves.urllib.parse import urlparse
 from urlgrabber import grabber, mirror
 
 from osc2.build import BuildResult
@@ -203,7 +203,7 @@ def _download_url_builder(binfo, bdep):
     """
     if binfo.get('downloadurl') is None:
         return None, None, None
-    data = urlparse.urlparse(binfo.get('downloadurl'))
+    data = urlparse(binfo.get('downloadurl'))
     # remove path from downloadurl
     downloadurl = binfo.get('downloadurl').replace(data[2], '')
     path = "%s/%s/%s/%s/%s" % (data[2], bdep.get('project').replace(':', ':/'),

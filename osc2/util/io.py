@@ -24,7 +24,7 @@ def _copy_file(fsource_obj, fdest_obj, bufsize, size,
         write(data)
 
 
-def copy_file(source, dest, mode=0644, mtime=None, bufsize=8096,
+def copy_file(source, dest, mode=0o644, mtime=None, bufsize=8096,
               size=-1, uid=-1, gid=-1, read_method='read',
               write_method='write'):
     """Copy a file source to file dest.

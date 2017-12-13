@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from six import iteritems
 
 from osc2.wc.base import (WorkingCopy, UpdateStateMixin, CommitStateMixin,
                           PendingTransactionError, FileConflictError)
@@ -675,7 +676,7 @@ class Project(WorkingCopy):
                 raise ValueError('package states required')
             wc_write_packages(path, '<packages/>')
             packages = wc_read_packages(path)
-            for package, st in package_states.iteritems():
+            for package, st in iteritems(package_states):
                 packages.add(package, state=st)
             packages.write()
         if '_version' in missing:

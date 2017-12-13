@@ -6,6 +6,8 @@ It can be used to perform a local build.
 import os
 import subprocess
 
+from six import iteritems
+
 
 def su_cmd(cmd, options):
     """Constructs a new command str which invokes cmd with su.
@@ -153,7 +155,7 @@ class Builder(object):
         buildarch = buildarch or harch
         self.__dict__['_build_helper'] = build_helper(harch, buildarch, can)
         self.__dict__['_options'] = {}
-        for opt, val in opts.iteritems():
+        for opt, val in iteritems(opts):
             self.set(opt, val)
 
     def set(self, opt, val, append=False):

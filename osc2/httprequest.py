@@ -11,17 +11,22 @@ Example usage:
  print f.read()
 """
 
-import os
-import urllib2
-import urllib
-import cookielib
-import urlparse
-import cStringIO
-import mmap
-import logging
 import base64
+import logging
+import mmap
 
+import os
+import six
 from lxml import etree
+from six.moves import cStringIO
+from six.moves import urllib_request, urllib_error, urllib_parse
+from six.moves.http_cookiejar import LWPCookieJar
+from six.moves.urllib.parse import urlsplit, urlunsplit
+
+if six.PY2:
+    from urllib2 import AbstractHTTPHandler
+else:
+    from urllib.request import AbstractHTTPHandler
 
 __all__ = ['AbstractHTTPRequest', 'AbstractHTTPResponse', 'HTTPError',
            'Urllib2HTTPResponse', 'Urllib2HTTPError', 'Urllib2HTTPRequest']
@@ -39,18 +44,18 @@ def build_url(apiurl, path, **query):
     **query -- optional query parameters (default: {})
 
     """
-    quoted_path = '/'.join([urllib.quote_plus(p) for p in path.split('/')])
+    quoted_path = '/'.join([urllib_parse.quote_plus(p) for p in path.split('/')])
     # rewrite to internal key -> ['val'] representation
     query.update([(k, [query[k]]) for k in query.keys()
                   if not hasattr(query[k], 'pop')])
     # sort query keys (to get a reproduceable url)
     sorted_keys = sorted(query.keys())
-    quoted_query = '&'.join([urllib.quote_plus(k) + '=' +
-                             urllib.quote_plus(v)
+    quoted_query = '&'.join([urllib_parse.quote_plus(k) + '=' +
+                             urllib_parse.quote_plus(v)
                              for k in sorted_keys for v in query[k] if v])
-    scheme, host = urlparse.urlsplit(apiurl)[0:2]
-    return urlparse.urlunsplit((scheme, host, quoted_path, quoted_query,
-                                ''))
+    scheme, host = urlsplit(apiurl)[0:2]
+    return urlunsplit((scheme, host, quoted_path, quoted_query,
+                       ''))
 
 
 class AbstractHTTPResponse(object):
@@ -218,6 +223,7 @@ class Urllib2HTTPResponse(AbstractHTTPResponse):
     The original response is a urllib.addinfourl object.
 
     """
+
     def __init__(self, resp):
         super(Urllib2HTTPResponse, self).__init__(resp.geturl(),
                                                   resp.getcode(),
@@ -254,6 +260,7 @@ class AbstractUrllib2CredentialsManager(object):
     is up to the implementation of the concrete subclass.
 
     """
+
     def get_credentials(self, url):
         """Returns the credentials for the given url.
 
@@ -275,14 +282,14 @@ class Urllib2SingleCredentialsManager(AbstractUrllib2CredentialsManager):
         url url.
 
         """
-        self._password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        self._password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
         self._password_mgr.add_password(None, url, username, password)
 
     def get_credentials(self, url):
         return self._password_mgr.find_user_password(None, url)
 
 
-class Urllib2BasicAuthHandler(urllib2.BaseHandler):
+class Urllib2BasicAuthHandler(urllib_request.BaseHandler):
     """A default urllib2 basic auth handler.
 
     It always sends the credentials for the configured url.
@@ -358,22 +365,22 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
         if authhandler is not None:
             handlers.append(authhandler)
         if self.debug:
-            urllib2.AbstractHTTPHandler.__init__ = (
+            AbstractHTTPHandler.__init__ = (
                 lambda self, debuglevel=0: setattr(self, '_debuglevel', 1))
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
+        opener = urllib_request.build_opener(*handlers)
+        urllib_request.install_opener(opener)
 
     def _setup_cookie_processor(self, cookie_filename):
         if not cookie_filename:
             return None
         if (os.path.exists(cookie_filename) and not
-                os.path.isfile(cookie_filename)):
+        os.path.isfile(cookie_filename)):
             raise ValueError("%s exists but is no file" % cookie_filename)
         elif not os.path.exists(cookie_filename):
             open(cookie_filename, 'w').close()
-        cookiejar = cookielib.LWPCookieJar(cookie_filename)
+        cookiejar = LWPCookieJar(cookie_filename)
         cookiejar.load(ignore_discard=True)
-        return urllib2.HTTPCookieProcessor(cookiejar)
+        return urllib_request.HTTPCookieProcessor(cookiejar)
 
     def _setup_authhandler(self, username, password):
         if username == '':
@@ -386,7 +393,7 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
         if not apiurl:
             apiurl = self.apiurl
         url = build_url(apiurl, path, **query)
-        request = urllib2.Request(url)
+        request = urllib_request.Request(url)
         request.get_method = lambda: method
         return request
 
@@ -395,7 +402,7 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
             return False
         # this is needed for validation so that we can seek to the "top" of
         # the file again (after validation)
-        sio = cStringIO.StringIO(resp.read())
+        sio = cStringIO(resp.read())
         resp._sio = sio
         self._logger.debug("validate resp against schema: %s", schema_filename)
         root = etree.fromstring(resp.read())
@@ -416,8 +423,8 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
         request = self._build_request(method, path, apiurl, **query)
         self._logger.info(request.get_full_url())
         try:
-            f = urllib2.urlopen(request)
-        except urllib2.HTTPError as e:
+            f = urllib_request.urlopen(request)
+        except urllib_error.HTTPError as e:
             raise Urllib2HTTPError(e)
         f = self._new_response(f)
         self._validate_response(f, schema)
@@ -442,9 +449,9 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
                 f = self._send_file(request, filename, urlencoded)
             else:
                 if urlencoded:
-                    data = urllib.quote_plus(data)
-                f = urllib2.urlopen(request, data)
-        except urllib2.HTTPError as e:
+                    data = urllib_parse.quote_plus(data)
+                f = urllib_request.urlopen(request, data)
+        except urllib_error.HTTPError as e:
             raise Urllib2HTTPError(e)
         f = self._new_response(f)
         self._validate_response(f, schema)
@@ -461,8 +468,8 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
             else:
                 data = fobj.read()
             if urlencoded:
-                data = urllib.quote_plus(data)
-            return urllib2.urlopen(request, data)
+                data = urllib_parse.quote_plus(data)
+            return urllib_request.urlopen(request, data)
 
     def _check_put_post_args(self, data, filename):
         if filename and data is not None:

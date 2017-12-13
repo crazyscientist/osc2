@@ -9,6 +9,8 @@ import errno
 import fcntl
 import shutil
 
+from six import iteritems
+
 from lxml import etree, objectify
 
 from osc2.wc.base import AbstractTransactionState
@@ -276,7 +278,7 @@ class XMLPackageTracker(XMLEntryTracker):
         return '_packages'
 
     def merge(self, new_states):
-        for package, st in new_states.iteritems():
+        for package, st in iteritems(new_states):
             if self.find(package) is None:
                 self.add(package, st)
             else:
@@ -297,12 +299,12 @@ class XMLFileTracker(XMLEntryTracker):
     def merge(self, new_states, new_entries):
         filenames = [entry.get('name') for entry in new_entries]
         # ignore locally added files
-        st_filenames = [f for f, st in new_states.iteritems() if st != 'A']
+        st_filenames = [f for f, st in iteritems(new_states) if st != 'A']
         if (len(filenames) != len(st_filenames)
                 or set(filenames) != set(st_filenames)):
             raise ValueError("data of new_states and new_entries mismatch")
         self._xml = new_entries
-        for filename, st in new_states.iteritems():
+        for filename, st in iteritems(new_states):
             if st == 'A':
                 # add files with state 'A' again
                 self.add(filename, st)
@@ -375,7 +377,7 @@ class XMLTransactionState(AbstractTransactionState):
 
     def _add_states(self, states):
         states_elm = self._xml.find('states')
-        for entry, st in states.iteritems():
+        for entry, st in iteritems(states):
             elm = states_elm.makeelement('state', entry=entry, name=st)
             states_elm.append(elm)
 
