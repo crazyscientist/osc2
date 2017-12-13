@@ -661,22 +661,22 @@ class TestRemoteModel(OscTest):
         """iterate over the file"""
         f = RORemoteFile('/source/project/package/fname')
         i = iter(f)
-        self.assertEqualFile(i.next(), 'remotefile1')
+        self.assertEqualFile(next(i), 'remotefile1')
         f = RORemoteFile('/source/project/package/fname2', stream_bufsize=6)
         i = iter(f)
-        self.assertEqual(i.next(), 'yet an')
-        self.assertEqual(i.next(), 'other\n')
-        self.assertEqual(i.next(), 'simple')
-        self.assertEqual(i.next(), '\nfile\n')
+        self.assertEqual(next(i), 'yet an')
+        self.assertEqual(next(i), 'other\n')
+        self.assertEqual(next(i), 'simple')
+        self.assertEqual(next(i), '\nfile\n')
 
     @GET('http://localhost/source/project/package/fname2', file='remotefile2')
     def test_remotefile3(self):
         """store file"""
         f = RORemoteFile('/source/project/package/fname2')
-        sio = StringIO()
+        sio = cStringIO()
         f.write_to(sio, size=12)
         self.assertEqual(sio.getvalue(), 'yet another\n')
-        sio = StringIO()
+        sio = cStringIO()
         f.write_to(sio)
         self.assertEqual(sio.getvalue(), 'simple\nfile\n')
 
@@ -831,24 +831,24 @@ class TestRemoteModel(OscTest):
         """iterate over the file (but read only 8 bytes)"""
         f = RORemoteFile('/source/project/package/fname')
         i = iter(f)
-        self.assertEqualFile(i.next(), 'remotefile1')
+        self.assertEqualFile(next(i), 'remotefile1')
         f = RORemoteFile('/source/project/package/fname2', stream_bufsize=6)
         i = f.__iter__(size=8)
-        self.assertEqual(i.next(), 'yet an')
-        self.assertEqual(i.next(), 'ot')
+        self.assertEqual(next(i), 'yet an')
+        self.assertEqual(next(i), 'ot')
         f = RWRemoteFile('/source/project/package/fname2', stream_bufsize=6)
         i = f.__iter__(size=8)
-        self.assertEqual(i.next(), 'yet an')
-        self.assertEqual(i.next(), 'ot')
+        self.assertEqual(next(i), 'yet an')
+        self.assertEqual(next(i), 'ot')
 
     @GET('http://localhost/source/project/package/fname2', file='remotefile2')
     def test_rwremotefile10(self):
         """read some bytes, write some bytes and call write_to"""
         f = RWRemoteFile('/source/project/package/fname2', append=True)
         self.assertEqual(f.read(3), 'yet')
-        self.assertTrue(isinstance(f._fobj, OutputType))
+        self.assertTrue(isinstance(f._fobj, StringIO))
         f.write('01234567')
-        sio = StringIO()
+        sio = cStringIO()
         f.write_to(sio, 7)
         self.assertEqual(sio.getvalue(), '\nsimple')
 

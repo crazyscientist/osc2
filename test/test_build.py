@@ -190,13 +190,13 @@ class TestBuild(OscTest):
         br = BuildResult('test', repository='repo', arch='x86_64')
         archive = br.binarylist(view='cpio')
         it = iter(archive)
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'foo\n')
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'bar\n')
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'glibc\n')
-        self.assertRaises(StopIteration, it.next)
+        self.assertRaises(StopIteration, next, it)
 
     @GET(('http://localhost/build/test/repo/x86_64/_repository?binary=foo&'
           'binary=bar&view=cpio'),
@@ -206,11 +206,11 @@ class TestBuild(OscTest):
         br = BuildResult('test', repository='repo', arch='x86_64')
         archive = br.binarylist(view='cpio', binary=['foo', 'bar'])
         it = iter(archive)
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'foo\n')
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'bar\n')
-        self.assertRaises(StopIteration, it.next)
+        self.assertRaises(StopIteration, next, it)
 
     @GET(('http://localhost/build/test/repo/x86_64/pkg?binary=foo&'
           'binary=bar&view=cpio'),
@@ -221,11 +221,11 @@ class TestBuild(OscTest):
                          arch='x86_64')
         archive = br.binarylist(view='cpio', binary=['foo', 'bar'])
         it = iter(archive)
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'foo\n')
-        archive_file = it.next()
+        archive_file = next(it)
         self.assertEqual(archive_file.read(), 'bar\n')
-        self.assertRaises(StopIteration, it.next)
+        self.assertRaises(StopIteration, next, it)
 
     @GET('http://localhost/build/test/repo/i586/osc/_log', text='logfile')
     def test_logfile1(self):
