@@ -3,9 +3,9 @@
 It can be used to perform a local build.
 """
 
-import os
 import subprocess
 
+import os
 from six import iteritems
 
 
@@ -85,9 +85,9 @@ def can_build(hostarch, buildarch, cando):
     Otherwise False is returned.
 
     """
-    if hostarch not in cando.keys():
+    if hostarch not in list(cando.keys()):
         raise ValueError("hostarch \"%s\" is not supported" % hostarch)
-    return buildarch in cando[hostarch].keys()
+    return buildarch in list(cando[hostarch].keys())
 
 
 def build_helper(hostarch, buildarch, cando):

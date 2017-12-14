@@ -1,15 +1,16 @@
-import os
 import unittest
-import stat
-from cStringIO import StringIO, OutputType
 
+import os
+import stat
+from cStringIO import OutputType
 from lxml import etree
+from six.moves import cStringIO
 
 from osc2.remote import (RemoteProject, RemotePackage, Request,
                          RORemoteFile, RWRemoteFile, RWLocalFile,
                          RemotePerson, RemoteGroup)
-from test.osctest import OscTest
 from test.httptest import GET, PUT, POST, DELETE
+from test.osctest import OscTest
 
 
 def suite():
@@ -561,7 +562,7 @@ class TestRemoteModel(OscTest):
         """test request diff (returned object should have a write_to method"""
         req = Request.find('120703')
         f = req.diff()
-        sio = StringIO()
+        sio = cStringIO()
         f.write_to(sio)
         self.assertEqual(sio.getvalue(), 'some diff content\n')
 
@@ -846,7 +847,7 @@ class TestRemoteModel(OscTest):
         """read some bytes, write some bytes and call write_to"""
         f = RWRemoteFile('/source/project/package/fname2', append=True)
         self.assertEqual(f.read(3), 'yet')
-        self.assertTrue(isinstance(f._fobj, StringIO))
+        self.assertTrue(isinstance(f._fobj, OutputType))
         f.write('01234567')
         sio = cStringIO()
         f.write_to(sio, 7)

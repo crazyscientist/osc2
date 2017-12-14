@@ -11,10 +11,10 @@ Example usage:
  print f.read()
 """
 
-import base64
 import logging
 import mmap
 
+import base64
 import os
 import six
 from lxml import etree
@@ -46,7 +46,7 @@ def build_url(apiurl, path, **query):
     """
     quoted_path = '/'.join([urllib_parse.quote_plus(p) for p in path.split('/')])
     # rewrite to internal key -> ['val'] representation
-    query.update([(k, [query[k]]) for k in query.keys()
+    query.update([(k, [query[k]]) for k in list(query.keys())
                   if not hasattr(query[k], 'pop')])
     # sort query keys (to get a reproduceable url)
     sorted_keys = sorted(query.keys())

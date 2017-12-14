@@ -1,7 +1,8 @@
 """Provides some functions to run applications from the enviroment."""
 
-import os
 import subprocess
+
+import os
 
 from osc2.cli.cli import UserAbort
 from osc2.util.io import copy_file, mkstemp
@@ -76,7 +77,7 @@ def edit_message(template=None, footer=None, suffix=''):
                 msg = "no message specified: " + choices
                 if template == message:
                     msg = "template was not changed: " + choices
-                repl = raw_input(msg)
+                repl = input(msg)
                 if repl.lower() == 'i':
                     return message
                 elif repl.lower() != 'e':

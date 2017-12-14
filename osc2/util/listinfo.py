@@ -24,7 +24,7 @@ class ListInfo(object):
         self._listnames = list(listnames)
         for listname in self._listnames:
             setattr(self, listname, [])
-        self._listnames.extend(listdata.keys())
+        self._listnames.extend(list(listdata.keys()))
         for listname, data in iteritems(listdata):
             setattr(self, listname, data)
 

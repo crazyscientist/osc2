@@ -5,16 +5,15 @@ and to fetch build dependencies from the api or a mirror.
 
 import os
 from collections import namedtuple
-
 from six.moves.urllib.parse import urlparse
 from urlgrabber import grabber, mirror
 
 from osc2.build import BuildResult
+from osc2.httprequest import HTTPError, build_url
+from osc2.remote import RORemoteFile
+from osc2.util.io import copy_file
 from osc2.util.listinfo import ListInfo
 from osc2.util.notify import Notifier
-from osc2.util.io import copy_file
-from osc2.remote import RORemoteFile
-from osc2.httprequest import HTTPError, build_url
 
 
 class CacheManager(object):
@@ -179,13 +178,13 @@ class NamePreferCacheManager(FilenameCacheManager):
         self._prefers = prefers
 
     def _calculate_filename(self, bdep, *args, **kwargs):
-        if bdep.get('name') in self._prefers.keys():
+        if bdep.get('name') in list(self._prefers.keys()):
             return self._prefers[bdep.get('name')]
         return super(NamePreferCacheManager, self)._calculate_filename(
             bdep, *args, **kwargs)
 
     def remove(self, bdep, *args, **kwargs):
-        if bdep.get('name') in self._prefers.keys():
+        if bdep.get('name') in list(self._prefers.keys()):
             # do not unlink package
             del self._prefers[bdep.get('name')]
             return

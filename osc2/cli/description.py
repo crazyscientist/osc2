@@ -11,13 +11,13 @@ if 2 classes from different modules have the same name.
 
 """
 
-import textwrap
+import argparse
 import inspect
 import logging
+import textwrap
+
 import re
 from six import itervalues
-
-import argparse
 
 
 def logger():
@@ -164,7 +164,7 @@ class AbstractCommandDescription(object):
 
         """
         defaults = {'oargs': [], 'oargs_use_wc': cls.use_wc,
-                    'func': cls.func, 'func_defaults': cls.func_defaults}
+                    'func': cls.func, 'func_defaults': cls.__defaults__}
         if cls.args is not None:
             eoargs = cls.args.split()
             for oarg, nargs in cls._parse_extended_oargs(eoargs):

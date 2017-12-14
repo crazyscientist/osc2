@@ -19,14 +19,14 @@ Some notes about terminology:
 
 """
 
-import os
-import re
 import logging
 
+import os
+import re
 from six import iterkeys, iteritems
 
-from osc2.wc.project import Project
 from osc2.wc.package import Package
+from osc2.wc.project import Project
 from osc2.wc.util import (wc_is_project, wc_is_package, wc_read_project,
                           wc_read_package, wc_read_apiurl, wc_parent)
 
@@ -80,7 +80,7 @@ class ResolvedInfo(object):
         self._data[name] = value
 
     def __getattr__(self, name):
-        if name in self._data.keys():
+        if name in list(self._data.keys()):
             return self._data[name]
         return getattr(self._data, name)
 

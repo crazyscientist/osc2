@@ -7,7 +7,7 @@ from lxml import etree, objectify
 __all__ = ['ElementClassLookup', 'get_parser']
 
 
-class XPathFindMixin:
+class XPathFindMixin(object):
     """Mixes find and findall methods in that support an xpath.
 
     This is an old-style class to avoid issues when inheriting

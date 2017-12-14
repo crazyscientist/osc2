@@ -1,18 +1,20 @@
 """Main entry point for the cli module."""
 
-import os
 import inspect
 import logging
-from six import iteritems
-from six.moves.urllib.parse import urlparse
-from six.moves.configparser import SafeConfigParser
-from collections import Sequence
 
-from osc2.core import Osc
-from osc2.cli import plugin
-from osc2.cli.description import CommandDescription
-from osc2.cli import render
+import os
+from collections import Sequence
+from functools import wraps
+from six import iteritems
+from six.moves.configparser import SafeConfigParser
+from six.moves.urllib.parse import urlparse
+
 from osc2.cli import parse
+from osc2.cli import plugin
+from osc2.cli import render
+from osc2.cli.description import CommandDescription
+from osc2.core import Osc
 
 
 # TODO: move this into a different module
@@ -107,6 +109,7 @@ def illegal_options(*args, **kwargs):
 
     """
     def decorate(f):
+        @wraps(f)
         def checker(*f_args, **f_kwargs):
             def parse_illegal_options_doc(doc):
                 doc = (doc or '').splitlines()
@@ -135,7 +138,6 @@ def illegal_options(*args, **kwargs):
                     msg = parse_illegal_options_doc(f.__doc__) % {'opt': opt}
                     raise ValueError(msg)
             return f(*f_args, **f_kwargs)
-        checker.func_name = f.func_name
         return checker
     return decorate
 
@@ -152,6 +154,7 @@ def at_most(n, *args, **kwargs):
 
     """
     def decorate(f):
+        @wraps(f)
         def checker(*f_args, **f_kwargs):
             info = _extract_info(f, *f_args, **f_kwargs)
             if info is not None:
@@ -166,21 +169,12 @@ def at_most(n, *args, **kwargs):
                     if len(val) > n:
                         raise ValueError(msg % {'arg': arg, 'times': n})
             return f(*f_args, **f_kwargs)
-        checker.func_name = f.func_name
         return checker
     return decorate
 
 
 def import_ui():
     """Imports the commands"""
-    import osc2.cli.request.ui
-    import osc2.cli.review.ui
-    import osc2.cli.list.ui
-    import osc2.cli.checkout.ui
-    import osc2.cli.update.ui
-    import osc2.cli.commit.ui
-    import osc2.cli.status.ui
-    import osc2.cli.add.ui
 
 
 def call(func):
@@ -261,7 +255,7 @@ class TextualAlias(object):
 
     @classmethod
     def add_arguments(cls, parser):
-        cls.func_defaults = {'cmd': cls.alias}
+        cls.__defaults__ = {'cmd': cls.alias}
         super(TextualAlias, cls).add_arguments(parser)
 
     @staticmethod

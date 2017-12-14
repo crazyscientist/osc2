@@ -4,20 +4,19 @@ instance.
 
 """
 
-import os
 import errno
 import fcntl
-import shutil
 
+import os
+import shutil
+from lxml import etree, objectify
 from six import iteritems
 
-from lxml import etree, objectify
-
-from osc2.wc.base import AbstractTransactionState
 from osc2.source import File, Directory, Linkinfo
 from osc2.util.io import mkstemp
 from osc2.util.xml import fromstring
 from osc2.util.xpath import XPathBuilder
+from osc2.wc.base import AbstractTransactionState
 
 __all__ = ['wc_is_project', 'wc_is_package', 'wc_read_project',
            'wc_read_package', 'wc_read_apiurl']
@@ -285,7 +284,7 @@ class XMLPackageTracker(XMLEntryTracker):
                 self.set(package, st)
         for package in self._xml.findall(self._tag):
             name = package.get('name')
-            if name not in new_states.keys():
+            if name not in list(new_states.keys()):
                 self.remove(name)
         self.write()
 

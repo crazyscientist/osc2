@@ -4,6 +4,9 @@ import os
 import shutil
 from six import iteritems
 
+from osc2.remote import RemotePackage
+from osc2.source import Project as SourceProject
+from osc2.util.listinfo import ListInfo
 from osc2.wc.base import (WorkingCopy, UpdateStateMixin, CommitStateMixin,
                           PendingTransactionError, FileConflictError)
 from osc2.wc.package import Package
@@ -12,11 +15,8 @@ from osc2.wc.util import (wc_read_project, wc_read_apiurl, wc_read_packages,
                           wc_write_packages, missing_storepaths, wc_lock,
                           WCInconsistentError, wc_is_project, wc_is_package,
                           wc_pkg_data_mkdir, XMLTransactionState, _storedir,
-                          _STORE, wc_pkg_data_filename, wc_verify_format,
-                          _PKG_DATA, wc_write_version)
-from osc2.source import Project as SourceProject
-from osc2.remote import RemotePackage
-from osc2.util.listinfo import ListInfo
+                          wc_pkg_data_filename, wc_verify_format,
+                          wc_write_version)
 
 
 class PackageUpdateInfo(ListInfo):
@@ -423,7 +423,7 @@ class Project(WorkingCopy):
                 if [p for p in packages if p in package_filenames]:
                     msg = 'package present in *packages and package_filenames'
                     raise ValueError(msg)
-                packages = list(packages) + package_filenames.keys()
+                packages = list(packages) + list(package_filenames.keys())
                 cinfo = self._calculate_commitinfo(*packages)
                 conflicts = cinfo.conflicted
                 if conflicts:

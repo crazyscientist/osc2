@@ -1,22 +1,22 @@
 """Class to manage package working copies."""
 
-import os
-import hashlib
-import copy
-import subprocess
 import errno
+import subprocess
 from difflib import unified_diff
 
+import copy
+import hashlib
+import os
 from lxml import etree
 from six import itervalues, iteritems
 
 from osc2.core import Osc
+from osc2.remote import RWLocalFile
 from osc2.source import File, Directory, Linkinfo
 from osc2.source import Package as SourcePackage
-from osc2.remote import RWLocalFile
-from osc2.util.xml import fromstring
 from osc2.util.io import copy_file
 from osc2.util.listinfo import ListInfo
+from osc2.util.xml import fromstring
 from osc2.wc.base import (WorkingCopy, UpdateStateMixin, CommitStateMixin,
                           FileConflictError, PendingTransactionError,
                           no_pending_transaction)
@@ -25,8 +25,7 @@ from osc2.wc.util import (wc_read_package, wc_read_project, wc_read_apiurl,
                           wc_write_apiurl, wc_write_files, wc_read_files,
                           missing_storepaths, WCInconsistentError,
                           wc_pkg_data_filename, XMLTransactionState,
-                          wc_diff_mkdir, _storedir, _PKG_DATA,
-                          wc_verify_format, wc_write_version)
+                          wc_diff_mkdir, _storedir, wc_verify_format, wc_write_version)
 
 
 def file_md5(filename):
@@ -611,7 +610,7 @@ class Package(WorkingCopy):
         """
         for handler in self.skip_handlers:
             skips, unskips = handler.skip(copy.deepcopy(uinfo))
-            inv = [f for f in skips if f not in uinfo.data.keys()]
+            inv = [f for f in skips if f not in list(uinfo.data.keys())]
             inv += [f for f in unskips if f not in uinfo.skipped]
             if inv:
                 msg = "invalid skip/unskip files: %s" % ', '.join(inv)
