@@ -1,6 +1,6 @@
 lxml
 pycurl
-urlgrabber
+# urlgrabber
 jinja2
 six
 
