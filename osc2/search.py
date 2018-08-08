@@ -90,8 +90,7 @@ class PackageCollection(OscElement):
 
 
 class ROPackage(OscElement):
-    """
-    Represents a read only package.
+    """Represents a read only package.
 
     This kind of package object is usually used in a collection.
     """
@@ -163,8 +162,7 @@ def find_project(xp, **kwargs):
 
 
 def find_package(xp, **kwargs):
-    """
-    Returns a PackageCollection with objects which match the xpath.
+    """Returns a PackageCollection with objects which match the xpath.
 
     xp is the xpath which is used for the search (either an
     Expression object or a string).
