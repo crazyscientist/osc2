@@ -391,8 +391,7 @@ class TestProject(OscTest):
         self.assertEqual(tl._begin, ['prj_update', 'update'])
         self.assertEqual(tl._finished, ['update', 'prj_update'])
         self.assertEqual(tl._transfer, [])
-        keys = tl._processed.keys()
-        keys.sort()
+        keys = sorted(tl._processed.keys())
         self.assertEqual(keys, ['file', 'foo'])
         self.assertEqual(tl._processed['file'], (None, ' '))
         self.assertEqual(tl._processed['foo'], (None, ' '))
@@ -427,8 +426,7 @@ class TestProject(OscTest):
         self.assertEqual(tl._begin, ['prj_update', 'update'])
         self.assertEqual(tl._finished, ['update', 'prj_update'])
         self.assertEqual(tl._transfer, [('download', 'file')])
-        keys = tl._processed.keys()
-        keys.sort()
+        keys = sorted(tl._processed.keys())
         self.assertEqual(keys, ['file', 'foo'])
         self.assertEqual(tl._processed['file'], (' ', None))
         self.assertEqual(tl._processed['foo'], (' ', None))
@@ -494,8 +492,7 @@ class TestProject(OscTest):
         self.assertEqual(prj._status('abc'), '?')
         self._not_exists(path, '.osc', '_transaction')
         # check transaction listener
-        keys = tl._processed.keys()
-        keys.sort()
+        keys = sorted(tl._processed.keys())
         self.assertEqual(keys, ['prj_update:abc', 'prj_update:add',
                                 'prj_update:foo', 'update:added',
                                 'update:dummy', 'update:file', 'update:foo',
@@ -751,7 +748,7 @@ class TestProject(OscTest):
         self.assertEqual(tl._begin, ['prj_commit'])
         self.assertEqual(tl._finished, ['prj_commit'])
         self.assertEqual(tl._transfer, [])
-        self.assertEqual(tl._processed.keys(), ['missing'])
+        self.assertEqual(list(tl._processed), ['missing'])
         self.assertEqual(tl._processed['missing'], (None, 'D'))
 
     @GET('http://localhost/source/prj2/foo_modified?rev=latest',

@@ -7,6 +7,7 @@ Additionally it provides some convenience methods.
 
 import os
 import shutil
+import sys
 from tempfile import NamedTemporaryFile, mkdtemp as orig_mkdtemp
 
 from osc2.util.delegation import StringifiedDelegator, Delegator
@@ -21,7 +22,12 @@ def _copy_file(fsource_obj, fdest_obj, bufsize, size,
     write = getattr(fdest_obj, write_method)
     for data in iter_read(fsource_obj, bufsize=bufsize, size=size,
                           read_method=read_method):
-        write(data)
+        try:
+            write(data)
+        except TypeError:
+            if hasattr(data, "encode"):
+                data = data.encode(sys.getdefaultencoding())
+            write(data)
 
 
 def copy_file(source, dest, mode=0o644, mtime=None, bufsize=8096,

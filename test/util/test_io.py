@@ -283,11 +283,12 @@ class TestIO(OscTestCase):
 
     def test_mkstemp3(self):
         """write to tmpfile"""
+        teststring = 'foobar'.encode(sys.getdefaultencoding())
         with mkstemp(dir=self._tmpdir) as tmpfile:
-            tmpfile.write('foobar')
+            tmpfile.write(teststring)
             tmpfile.flush()
-            with open(tmpfile, 'r') as f:
-                self.assertEqual(f.read(), 'foobar')
+            with open(tmpfile, 'rb') as f:
+                self.assertEqual(f.read(), teststring)
         self.assertFalse(os.path.isfile(tmpfile))
 
 if __name__ == '__main__':

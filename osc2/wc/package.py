@@ -7,6 +7,7 @@ from difflib import unified_diff
 import copy
 import hashlib
 import os
+import sys
 from lxml import etree
 from six import itervalues, iteritems
 
@@ -25,7 +26,8 @@ from osc2.wc.util import (wc_read_package, wc_read_project, wc_read_apiurl,
                           wc_write_apiurl, wc_write_files, wc_read_files,
                           missing_storepaths, WCInconsistentError,
                           wc_pkg_data_filename, XMLTransactionState,
-                          wc_diff_mkdir, _storedir, wc_verify_format, wc_write_version)
+                          wc_diff_mkdir, _storedir, wc_verify_format,
+                          wc_write_version, _PKG_DATA)
 
 
 def file_md5(filename):
@@ -59,7 +61,7 @@ def is_binaryfile(filename):
     """
     with open(filename, 'rb') as f:
         data = f.read(4096)
-    return '\0' in data
+    return '\0'.encode(sys.getdefaultencoding()) in data
 
 
 class WCOutOfDateError(Exception):
@@ -1211,7 +1213,6 @@ class Package(WorkingCopy):
         ext_storedir -- path to the storedir (default: None)
 
         """
-        global _PKG_DATA
         if not os.path.exists(_storedir(path)):
             wc_init(path, ext_storedir=ext_storedir)
         missing, xml_data, pkg_data = Package.wc_check(path)

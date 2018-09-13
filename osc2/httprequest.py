@@ -16,8 +16,10 @@ import mmap
 
 import base64
 import os
+import sys
 import six
 from lxml import etree
+from six import binary_type, text_type
 from six.moves import cStringIO
 from six.moves import urllib_request, urllib_error, urllib_parse
 from six.moves.http_cookiejar import LWPCookieJar
@@ -32,6 +34,13 @@ __all__ = ['AbstractHTTPRequest', 'AbstractHTTPResponse', 'HTTPError',
            'Urllib2HTTPResponse', 'Urllib2HTTPError', 'Urllib2HTTPRequest']
 
 
+def _buffer(*args, **kwargs):
+    if six.PY2:
+        return buffer(*args, **kwargs)
+    else:
+        return memoryview(*args, **kwargs)
+
+
 def build_url(apiurl, path, **query):
     """Returns an url str.
 
@@ -44,7 +53,10 @@ def build_url(apiurl, path, **query):
     **query -- optional query parameters (default: {})
 
     """
-    quoted_path = '/'.join([urllib_parse.quote_plus(p) for p in path.split('/')])
+    if not isinstance(path, text_type):
+        path = text_type(path, sys.getdefaultencoding())
+    quoted_path = '/'.join([urllib_parse.quote_plus(p)
+                            for p in path.split('/')])
     # rewrite to internal key -> ['val'] representation
     query.update([(k, [query[k]]) for k in list(query.keys())
                   if not hasattr(query[k], 'pop')])
@@ -54,8 +66,7 @@ def build_url(apiurl, path, **query):
                              urllib_parse.quote_plus(v)
                              for k in sorted_keys for v in query[k] if v])
     scheme, host = urlsplit(apiurl)[0:2]
-    return urlunsplit((scheme, host, quoted_path, quoted_query,
-                       ''))
+    return urlunsplit((scheme, host, quoted_path, quoted_query, ''))
 
 
 class AbstractHTTPResponse(object):
@@ -237,6 +248,9 @@ class Urllib2HTTPResponse(AbstractHTTPResponse):
         return self.orig_resp
 
     def read(self, size=-1):
+        if isinstance(size, int) and size < 0 and sys.version_info.major > 2:
+            # In Python 3 negative values are not supported!
+            size = None
         return self._fobj().read(size)
 
     def close(self):
@@ -311,8 +325,10 @@ class Urllib2BasicAuthHandler(urllib_request.BaseHandler):
             url = request.get_full_url()
             user, password = self._creds_mgr.get_credentials(url)
             if user is not None and password is not None:
-                creds = base64.b64encode("%s:%s" % (user, password))
-                auth = "Basic %s" % creds
+                creds = base64.b64encode("{}:{}".format(user, password).encode(
+                    sys.getdefaultencoding()
+                ))
+                auth = "Basic %s" % creds.decode(sys.getdefaultencoding())
                 request.add_unredirected_header(self.AUTH_HEADER, auth)
         return request
 
@@ -434,6 +450,8 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
                    urlencoded):
         self._logger.info(request.get_full_url())
         f = None
+        if data and not isinstance(data, binary_type):
+            data = binary_type(data, sys.getdefaultencoding())
         if content_type and urlencoded:
             msg = 'content_type and urlencoded are mutually exclusive'
             raise ValueError(msg)
@@ -450,6 +468,8 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
             else:
                 if urlencoded:
                     data = urllib_parse.quote_plus(data)
+                if data and not isinstance(data, binary_type):
+                    data = binary_type(data, sys.getdefaultencoding())
                 f = urllib_request.urlopen(request, data)
         except urllib_error.HTTPError as e:
             raise Urllib2HTTPError(e)
@@ -464,7 +484,7 @@ class Urllib2HTTPRequest(AbstractHTTPRequest):
                 self._logger.debug("using mmap for file: %s" % filename)
                 data = mmap.mmap(fobj.fileno(), fsize, mmap.MAP_SHARED,
                                  mmap.PROT_READ)
-                data = buffer(data)
+                data = _buffer(data)
             else:
                 data = fobj.read()
             if urlencoded:

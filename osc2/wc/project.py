@@ -16,7 +16,7 @@ from osc2.wc.util import (wc_read_project, wc_read_apiurl, wc_read_packages,
                           WCInconsistentError, wc_is_project, wc_is_package,
                           wc_pkg_data_mkdir, XMLTransactionState, _storedir,
                           wc_pkg_data_filename, wc_verify_format,
-                          wc_write_version)
+                          wc_write_version, _STORE, _PKG_DATA)
 
 
 class PackageUpdateInfo(ListInfo):
@@ -321,7 +321,6 @@ class Project(WorkingCopy):
             self.notifier.processed(package, ' ', None)
 
     def _perform_deletes(self, ustate):
-        global _STORE
         uinfo = ustate.info
         for package in uinfo.deleted:
             st = self._status(package)
@@ -501,7 +500,6 @@ class Project(WorkingCopy):
                 self._revert(package)
 
     def _revert(self, package):
-        global _STORE
         # we do not need a "transaction" here, because an interrupted revert
         # can be easily continued later (in the worst case after a repair
         # of the project wc)
@@ -661,7 +659,6 @@ class Project(WorkingCopy):
         **package_states -- a package to state mapping (default: {})
 
         """
-        global _PKG_DATA
         missing, xml_data, pkg_data = Project.wc_check(path)
         if '_project' in missing:
             if not project:

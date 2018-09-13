@@ -2,7 +2,7 @@ import unittest
 
 import os
 import stat
-from cStringIO import OutputType
+import sys
 from lxml import etree
 from six.moves import cStringIO
 
@@ -605,7 +605,7 @@ class TestRemoteModel(OscTest):
         l.append(Request())
         l.append(Request(id='11'))
         l.append(Request(id='1'))
-        l.sort()
+        l = sorted(l)
         self.assertIsNone(l[0].get('id'))
         self.assertEqual(l[1].get('id'), '1')
         self.assertEqual(l[2].get('id'), '2')
@@ -743,7 +743,9 @@ class TestRemoteModel(OscTest):
          exp='yet another\nsim')
     def test_rwremotefile3(self):
         """write and seek"""
-        f = RWRemoteFile('/source/project/package/fname2')
+        f = RWRemoteFile('/source/project/package/fname2'.encode(
+            sys.getdefaultencoding()
+        ))
         f.write('ple\nfile\n')
         f.seek(0, os.SEEK_SET)
         f.write('yet another\nsim')
@@ -761,8 +763,6 @@ class TestRemoteModel(OscTest):
         # append/overwrite text
         f.write('more complex\n')
         f.write('testcase\n')
-        # check that it is a StringIO
-        self.assertTrue(isinstance(f._fobj, OutputType))
         f.close()
 
     @GET('http://localhost/source/project/package/fname?rev=123',
@@ -773,15 +773,24 @@ class TestRemoteModel(OscTest):
                          tmp_size=20, rev='123')
         f.seek(1, os.SEEK_SET)
         self.assertTrue(os.path.exists(f._fobj.name))
-        self.assertEqual(f.read(7), 'his is ')
+        self.assertEqual(f.read(7), 'his is '.encode(sys.getdefaultencoding()))
         f.seek(0, os.SEEK_SET)
-        self.assertEqual(f.read(7), 'This is')
+        self.assertEqual(f.read(7), 'This is'.encode(sys.getdefaultencoding()))
         f.seek(0, os.SEEK_SET)
         self.assertTrue(len(f.readlines()) == 5)
         f.seek(0, os.SEEK_SET)
-        self.assertEqual(f.readline(), 'This is a simple file\n')
-        self.assertEqual(f.readline(), 'with some newlines\n')
-        self.assertEqual(f.read(), '\nand\ntext.\n')
+        self.assertEqual(
+            f.readline(),
+            'This is a simple file\n'.encode(sys.getdefaultencoding())
+        )
+        self.assertEqual(
+            f.readline(),
+            'with some newlines\n'.encode(sys.getdefaultencoding())
+        )
+        self.assertEqual(
+            f.read(),
+            '\nand\ntext.\n'.encode(sys.getdefaultencoding())
+        )
         f.close()
         self.assertFalse(os.path.exists(f._fobj.name))
 
@@ -790,9 +799,9 @@ class TestRemoteModel(OscTest):
     def test_rwremotefile6(self):
         """write to file (tmpfile)"""
         f = RWRemoteFile('/source/project/package/fname2', use_tmp=True)
-        f.write('yet another\nsim')
+        f.write('yet another\nsim'.encode(sys.getdefaultencoding()))
         self.assertTrue(os.path.exists(f._fobj.name))
-        f.write('ple\nfile\n')
+        f.write('ple\nfile\n'.encode(sys.getdefaultencoding()))
         f.close()
         self.assertFalse(os.path.exists(f._fobj.name))
 
@@ -801,10 +810,10 @@ class TestRemoteModel(OscTest):
     def test_rwremotefile7(self):
         """write and seek (tmpfile)"""
         f = RWRemoteFile('/source/project/package/fname2', use_tmp=True)
-        f.write('ple\nfile\n')
+        f.write('ple\nfile\n'.encode(sys.getdefaultencoding()))
         self.assertTrue(os.path.exists(f._fobj.name))
         f.seek(0, os.SEEK_SET)
-        f.write('yet another\nsim')
+        f.write('yet another\nsim'.encode(sys.getdefaultencoding()))
         f.close(foo='bar')
         self.assertFalse(os.path.exists(f._fobj.name))
 
@@ -817,11 +826,14 @@ class TestRemoteModel(OscTest):
         f = RWRemoteFile('/source/project/package/fname2',
                          tmp_size=15, append=True)
         # read first line
-        self.assertEqual(f.readline(), 'yet another\n')
+        self.assertEqual(
+            f.readline(),
+            'yet another\n'.encode(sys.getdefaultencoding())
+        )
         self.assertTrue(os.path.exists(f._fobj.name))
         # append/overwrite text
-        f.write('more complex\n')
-        f.write('testcase\n')
+        f.write('more complex\n'.encode(sys.getdefaultencoding()))
+        f.write('testcase\n'.encode(sys.getdefaultencoding()))
         f.close()
         self.assertFalse(os.path.exists(f._fobj.name))
 
@@ -847,7 +859,6 @@ class TestRemoteModel(OscTest):
         """read some bytes, write some bytes and call write_to"""
         f = RWRemoteFile('/source/project/package/fname2', append=True)
         self.assertEqual(f.read(3), 'yet')
-        self.assertTrue(isinstance(f._fobj, OutputType))
         f.write('01234567')
         sio = cStringIO()
         f.write_to(sio, 7)
@@ -933,6 +944,7 @@ class TestRemoteModel(OscTest):
         req = RemoteGroup.find('group-name')
         self.assertEqual(req.email, 'group@example.com')
         self.assertEqual(req.persons, ['foo', 'bar'])
+
 
 if __name__ == '__main__':
     unittest.main()

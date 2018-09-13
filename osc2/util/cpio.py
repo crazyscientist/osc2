@@ -2,8 +2,10 @@
 
 import os
 import mmap
+import sys
 from struct import pack, unpack
 from collections import namedtuple
+from six import binary_type, text_type, PY2
 from six.moves import cStringIO
 
 from osc2.util.io import copy_file, iter_read
@@ -11,6 +13,11 @@ from osc2.util.io import copy_file, iter_read
 
 TRAILER = 'TRAILER!!!'
 IO_BLOCK_SIZE = 512
+
+if PY2:
+    nullbyte = "\0"
+else:
+    nullbyte = binary_type("\0", sys.getdefaultencoding())
 
 
 class CpioError(Exception):
@@ -29,7 +36,7 @@ class CpioError(Exception):
 class FileWrapper(object):
     """This class acts as a wrapper around a file or file-like object."""
 
-    def __init__(self, filename='', mode='r', fobj=None, use_mmap=False):
+    def __init__(self, filename='', mode='rb', fobj=None, use_mmap=False):
         """Constructs a new FileWrapper object.
 
         A ValueError is raised if neither filename nor fobj is specified
@@ -80,6 +87,7 @@ class FileWrapper(object):
 
         """
         data = ''
+        datytape = type(data)
         if self._peek_data:
             if num >= 0:
                 data = self._peek_data[:num]
@@ -88,7 +96,10 @@ class FileWrapper(object):
             else:
                 data = self._peek_data
                 self._peek_data = ''
-        data += self._fobj.read(num)
+        tmp = self._fobj.read(num)
+        if not isinstance(tmp, text_type):
+            tmp = text_type(tmp, sys.getdefaultencoding())
+        data += tmp
         self._pos += len(data)
         return data
 
@@ -245,6 +256,8 @@ class CpioHeader(object):
         """
         super(CpioHeader, self).__init__()
         self.magic = magic
+        if self.magic and not isinstance(self.magic, binary_type):
+            self.magic = binary_type(self.magic, sys.getdefaultencoding())
         if not no_convert:
             data = [int(i, 16) for i in data]
         self.__dict__.update(zip(self.ENTRIES, data))
@@ -259,7 +272,10 @@ class CpioHeader(object):
         """Returns header entries a hexadecimal str (except the magic)."""
         yield self.magic
         for entry in CpioHeader.ENTRIES:
-            yield "%08X" % getattr(self, entry)
+            entry = "%08X" % int(getattr(self, entry))
+            if not isinstance(entry, binary_type):
+                entry = binary_type(entry, sys.getdefaultencoding())
+            yield entry
 
 
 class ArchiveReader(object):
@@ -344,11 +360,10 @@ class ArchiveWriter(object):
         That is write the trailer and padding bytes.
 
         """
-        global IO_BLOCK_SIZE
         self._append_trailer()
         pad = IO_BLOCK_SIZE - (self._bytes_written % IO_BLOCK_SIZE)
         if pad > 0:
-            self._fobj.write('\0' * pad)
+            self._fobj.write(nullbyte * pad)
             self._bytes_written += pad
 
     def _write_header(self, hdr, source):
@@ -376,7 +391,6 @@ class ArchiveWriter(object):
 
     def _append_trailer(self):
         """Appends the trailer"""
-        global TRAILER
         st = self._create_dummy_stat(0, 0, 0, 0, 1, 0, 0, 0, 0)
         hdr = self._create_header(st, TRAILER)
         self._write_header(hdr, cStringIO())
@@ -418,8 +432,9 @@ class NewAsciiReader(ArchiveReader):
         In case of an error a CpioError is raised.
 
         """
-        global TRAILER
         data = self._fobj.read(NewAsciiFormat.LEN)
+        if hasattr(data, "encode"):
+            data = data.encode(sys.getdefaultencoding())
         if len(data) != NewAsciiFormat.LEN:
             msg = ("premature end of file (expected at least \'%d\' bytes)"
                    % NewAsciiFormat.LEN)
@@ -498,7 +513,10 @@ class NewAsciiWriter(ArchiveWriter):
             # this is only a good idea if it's a small file but we need
             # to know the size... (alternatively we can pass in an optional
             # filesize argument)
-            source = cStringIO(fobj.read())
+            data = fobj.read()
+            if data and not isinstance(data, text_type):
+                data = data.decode(sys.getdefaultencoding())
+            source = cStringIO(data)
             st = self._create_dummy_stat(0, 33188, 0, 0, 1, os.geteuid(),
                                          os.getegid(), len(source.getvalue()),
                                          0)
@@ -515,21 +533,27 @@ class NewAsciiWriter(ArchiveWriter):
         a file or file-like object which represents the file.
 
         """
+        print("===DEBUG===", list(hdr))
         packed_hdr = pack(NewAsciiFormat.FORMAT, *hdr)
         self._fobj.write(packed_hdr)
-        self._fobj.write(hdr.name + '\0')
+        line = hdr.name
+        if line and not isinstance(line, binary_type):
+            line = binary_type(line, sys.getdefaultencoding())
+        self._fobj.write(line + nullbyte)
         # write padding
         offset = NewAsciiFormat.LEN + hdr.namesize
         pad = NewAsciiFormat.calculate_padding(offset)
         if pad > 0:
-            self._fobj.write('\0' * pad)
+            self._fobj.write(nullbyte * pad)
             self._bytes_written += pad
         for data in iter_read(source):
+            if data and not isinstance(data, binary_type):
+                data = binary_type(data, sys.getdefaultencoding())
             self._fobj.write(data)
         # write padding
         pad = NewAsciiFormat.calculate_padding(hdr.filesize)
         if pad > 0:
-            self._fobj.write('\0' * pad)
+            self._fobj.write(nullbyte * pad)
             self._bytes_written += pad
         self._bytes_written += NewAsciiFormat.LEN + hdr.namesize + hdr.filesize
 
@@ -618,7 +642,6 @@ class CpioArchive(object):
         self._fobj.close()
 
     def __iter__(self):
-        global TRAILER
         for archive_file in self._files:
             yield archive_file
         if not self._reader.trailer_seen:

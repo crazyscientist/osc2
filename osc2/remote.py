@@ -483,6 +483,21 @@ class Request(RemoteModel):
         other_id = int(other.get('id', -1))
         return cmp(my_id, other_id)
 
+    def __eq__(self, other):
+        return int(self.get("id", -1)) == int(other.get("id", -1))
+
+    def __lt__(self, other):
+        return int(self.get("id", -1)) < int(other.get("id", -1))
+
+    def __le__(self, other):
+        return int(self.get("id", -1)) <= int(other.get("id", -1))
+
+    def __gt__(self, other):
+        return int(self.get("id", -1)) > int(other.get("id", -1))
+
+    def __ge__(self, other):
+        return int(self.get("id", -1)) >= int(other.get("id", -1))
+
 
 class RORemoteFile(object):
     """Provides basic methods to read and to store a remote file.

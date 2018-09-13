@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 
 from osc2.builder import (Builder, su_cmd, sudo_cmd, hostarch, can_build,
@@ -188,7 +189,10 @@ class TestBuilder(OscTest):
             ret = builder.run(stdout=f)
             self.assertEqual(ret, 0)
             f.seek(0, os.SEEK_SET)
-            self.assertEqual(f.read(), 'blah\n')
+            self.assertEqual(
+                f.read(),
+                'blah\n'.encode(sys.getdefaultencoding())
+            )
 
     def test_builder19(self):
         """test run method (no shell expansion)"""
@@ -200,7 +204,10 @@ class TestBuilder(OscTest):
             f.seek(0, os.SEEK_SET)
             # path is not expanded because subprocess.call is invoked
             # with shell=False
-            self.assertEqual(f.read(), '$PATH\n')
+            self.assertEqual(
+                f.read(),
+                '$PATH\n'.encode(sys.getdefaultencoding())
+            )
 
     def test_builder20(self):
         """test run method (specify spec file)"""
@@ -211,7 +218,10 @@ class TestBuilder(OscTest):
             self.assertEqual(ret, 0)
             f.seek(0, os.SEEK_SET)
             # output is the build descr
-            self.assertEqual(f.read(), 'foo.spec\n')
+            self.assertEqual(
+                f.read(),
+                'foo.spec\n'.encode(sys.getdefaultencoding())
+            )
 
     def test_builder21(self):
         """test cmd method (specifcy build descr)"""

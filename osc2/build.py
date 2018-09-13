@@ -2,7 +2,7 @@
 
 To access the remote build data use the class BuildResult.
 """
-
+import sys
 from six.moves import cStringIO as StringIO
 
 from lxml import etree
@@ -344,6 +344,8 @@ class BuildInfo(object):
 
         """
         xml_data = etree.tostring(self._xml, pretty_print=True)
+        if hasattr(xml_data, "decode"):
+            xml_data = xml_data.decode(sys.getdefaultencoding())
         sio = StringIO(xml_data)
         copy_file(sio, dest)
 

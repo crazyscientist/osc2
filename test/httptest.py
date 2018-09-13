@@ -1,7 +1,8 @@
 from functools import wraps
 
 import os
-from six import iteritems
+import sys
+from six import iteritems, binary_type, text_type
 from six.moves import cStringIO as StringIO
 from six.moves import urllib_request, urllib_response
 import unittest
@@ -89,6 +90,13 @@ class MyHeaders(dict):
             return []
         return [val]
 
+    def get_all(self, name, default=[]):
+        # Python 3 uses this method
+        val = self.get(name, default)
+        if val is None:
+            return default
+        return val
+
 
 class MyHTTPHandler(urllib_request.HTTPHandler, urllib_request.HTTPSHandler):
     def __init__(self, *args, **kwargs):
@@ -129,13 +137,20 @@ class MyHTTPHandler(urllib_request.HTTPHandler, urllib_request.HTTPSHandler):
         exp_content_type = kwargs.pop('exp_content_type', '')
         if exp_content_type:
             assert content_type == exp_content_type
-        data = str(req.get_data())
+        if hasattr(req, "get_data"):
+            data = str(req.get_data())
+        else:
+            data = req.data
+        if data and not isinstance(data, (binary_type, text_type)):
+            data = binary_type(data)
+
+        if hasattr(data, "decode"):
+            data = data.decode(sys.getdefaultencoding())
         if content_type == 'application/xml' and exp is not None:
             if not compare_xml(exp, data):
                 raise RequestDataMismatch(req.get_full_url(), exp, data)
         elif exp is not None and data != exp:
-            raise RequestDataMismatch(req.get_full_url(), repr(req.get_data()),
-                                      repr(exp))
+            raise RequestDataMismatch(req.get_full_url(), data, exp)
         return self._get_response(req, **kwargs)
 
     def _get_response(self, req, **kwargs):

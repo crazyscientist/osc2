@@ -95,7 +95,9 @@ class OscTest(MockUrllib2Request, OscTestCase):
         super(OscTest, self).setUp()
         Osc.init(self.apiurl, validate=True)
 
-    def assertEqualFile(self, x, filename, mode='r'):
+    def assertEqualFile(self, x, filename, mode='rb'):
+        if hasattr(x, "encode"):
+            x = x.encode(sys.getdefaultencoding())
         with open(self.fixture_file(filename), mode) as f:
             return self.assertEqual(x, f.read())
 

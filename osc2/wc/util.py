@@ -9,6 +9,7 @@ import fcntl
 
 import os
 import shutil
+import sys
 from lxml import etree, objectify
 from six import iteritems
 
@@ -581,11 +582,15 @@ def _write_storefile(path, filename, data):
         raise ValueError("path \"%s\" has no storedir" % path)
     fname = _storefile(path, filename)
     tmpfile = None
+
+    if hasattr(data, "encode"):
+        data = data.encode(sys.getdefaultencoding())
+
     try:
         tmpfile = mkstemp(dir=_storedir(path), delete=False)
         tmpfile.write(data)
         if data:
-            tmpfile.write('\n')
+            tmpfile.write('\n'.encode(sys.getdefaultencoding()))
     finally:
         if tmpfile is not None:
             tmpfile.close()

@@ -1278,7 +1278,7 @@ class TestPackage(OscTest):
         self.assertEqual(tl._begin, ['commit'])
         self.assertEqual(tl._finished, ['commit'])
         self.assertEqual(tl._transfer, [('upload', 'foo')])
-        self.assertEqual(tl._processed.keys(), ['foo'])
+        self.assertEqual(list(tl._processed), ['foo'])
         self.assertEqual(tl._processed['foo'], (' ', 'M'))
 
     @GET('http://localhost/source/prj/update_11?rev=latest',

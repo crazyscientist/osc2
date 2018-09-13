@@ -93,7 +93,7 @@ class FilenameCacheManager(CacheManager):
         bdep is a BuildDependency instance.
 
         """
-        return os.path.join(self, self._root, bdep.get('project'),
+        return os.path.join(self._root, bdep.get('project'),
                             bdep.get('repository'), bdep.get('arch'),
                             bdep.get('filename'))
 

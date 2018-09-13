@@ -873,5 +873,9 @@ class DummyExpression(object):
     def __ne__(self, other):
         return other
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
+
+    def __nonzero__(self):
+        # Keep this method for PY2 compatibility
+        return self.__bool__()

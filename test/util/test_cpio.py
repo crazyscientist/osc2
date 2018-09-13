@@ -1,5 +1,6 @@
 import os
 import mmap
+import sys
 import unittest
 # use BytesIO instead of cBytesIO because seek will be overridden
 from io import BytesIO
@@ -89,7 +90,7 @@ class TestCpio(OscTest):
             self.assertEqual(f.read(1), 'T')
             self.assertEqual(f.tell(), 1)
             # seek to position 0 again
-            f.seek(-1, os.SEEK_CUR)
+            f.seek(0, os.SEEK_SET)
             self.assertEqual(f.tell(), 0)
             self.assertEqual(f.read(5), 'This ')
             self.assertEqual(f.tell(), 5)
@@ -127,7 +128,7 @@ class TestCpio(OscTest):
 
     def test5(self):
         """test FileWrapper with unseekable file object"""
-        sio = BytesIO('Simple test file')
+        sio = BytesIO('Simple test file'.encode(sys.getdefaultencoding()))
         sio.seek = None
         f = FileWrapper(fobj=sio, use_mmap=False)
         self.assertFalse(f.is_seekable())
@@ -153,8 +154,8 @@ class TestCpio(OscTest):
 
     def test6(self):
         """test FileWrapper (invalid arguments)"""
-        sio = BytesIO('foo')
-        fname = self.fixture_file(u'filewrapper1.txt')
+        sio = BytesIO('foo'.encode(sys.getdefaultencoding()))
+        fname = self.fixture_file('filewrapper1.txt')
         self.assertRaises(ValueError, FileWrapper)
         self.assertRaises(ValueError, FileWrapper, filename=fname, fobj=sio)
 
@@ -198,7 +199,7 @@ class TestCpio(OscTest):
         f = FileWrapper(filename=fname)
         archive_reader = NewAsciiReader(f)
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 1788112)
         self.assertEqual(hdr.mode, 33188)
         self.assertEqual(hdr.uid, 1000)
@@ -216,7 +217,7 @@ class TestCpio(OscTest):
 #        self.assertTrue(hdr.is_regular_file())
         # next header is trailer
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 0)
         self.assertEqual(hdr.mode, 0)
         self.assertEqual(hdr.uid, 0)
@@ -242,7 +243,7 @@ class TestCpio(OscTest):
         f = FileWrapper(filename=fname)
         archive_reader = NewAsciiReader(f)
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 1788112)
         self.assertEqual(hdr.mode, 33188)
         self.assertEqual(hdr.uid, 1000)
@@ -260,7 +261,7 @@ class TestCpio(OscTest):
 #        self.assertTrue(hdr.is_regular_file())
         # next header is trailer
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 0)
         self.assertEqual(hdr.mode, 0)
         self.assertEqual(hdr.uid, 0)
@@ -283,12 +284,12 @@ class TestCpio(OscTest):
         """test NewAsciiReader (unseekable file object)"""
         # identical to test8 but this time a unseekable fobj is used
         fname = self.fixture_file('new_ascii_reader2.cpio')
-        sio = BytesIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'rb').read())
         sio.seek = None
         f = FileWrapper(fobj=sio)
         archive_reader = NewAsciiReader(f)
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 1788112)
         self.assertEqual(hdr.mode, 33188)
         self.assertEqual(hdr.uid, 1000)
@@ -306,7 +307,7 @@ class TestCpio(OscTest):
 #        self.assertTrue(hdr.is_regular_file())
         # next header is trailer
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 0)
         self.assertEqual(hdr.mode, 0)
         self.assertEqual(hdr.uid, 0)
@@ -332,7 +333,7 @@ class TestCpio(OscTest):
         archive_reader = NewAsciiReader(f)
         # check file foo
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 1788176)
         self.assertEqual(hdr.mode, 33188)
         self.assertEqual(hdr.uid, 1000)
@@ -350,7 +351,7 @@ class TestCpio(OscTest):
 #        self.assertTrue(hdr.is_regular_file())
         # check file foobar
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 1788110)
         self.assertEqual(hdr.mode, 33188)
         self.assertEqual(hdr.uid, 1000)
@@ -368,7 +369,7 @@ class TestCpio(OscTest):
 #        self.assertTrue(hdr.is_regular_file())
         # next header is trailer
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 0)
         self.assertEqual(hdr.mode, 0)
         self.assertEqual(hdr.uid, 0)
@@ -395,7 +396,9 @@ class TestCpio(OscTest):
         archive_reader = NewAsciiReader(f)
         # check file foo
         archv_file = archive_reader.next_file()
-        self.assertEqual(archv_file.hdr.magic, '070701')
+        self.assertEqual(archv_file.hdr.magic, '070701'.encode(
+            sys.getdefaultencoding())
+                         )
         self.assertEqual(archv_file.hdr.ino, 1788176)
         self.assertEqual(archv_file.hdr.mode, 33188)
         self.assertEqual(archv_file.hdr.uid, 1000)
@@ -416,7 +419,9 @@ class TestCpio(OscTest):
 #        self.assertTrue(archv_file.hdr.is_regular_file())
         # check file foobar
         archv_file = archive_reader.next_file()
-        self.assertEqual(archv_file.hdr.magic, '070701')
+        self.assertEqual(archv_file.hdr.magic, '070701'.encode(
+            sys.getdefaultencoding())
+                         )
         self.assertEqual(archv_file.hdr.ino, 1788110)
         self.assertEqual(archv_file.hdr.mode, 33188)
         self.assertEqual(archv_file.hdr.uid, 1000)
@@ -437,7 +442,9 @@ class TestCpio(OscTest):
 #        self.assertTrue(archv_file.hdr.is_regular_file())
         # next header is trailer
         archv_file = archive_reader.next_file()
-        self.assertEqual(archv_file.hdr.magic, '070701')
+        self.assertEqual(archv_file.hdr.magic, '070701'.encode(
+            sys.getdefaultencoding())
+                         )
         self.assertEqual(archv_file.hdr.ino, 0)
         self.assertEqual(archv_file.hdr.mode, 0)
         self.assertEqual(archv_file.hdr.uid, 0)
@@ -480,7 +487,7 @@ class TestCpio(OscTest):
         # but the expected results are different because the fobj
         # is not seekable
         fname = self.fixture_file('new_ascii_reader3.cpio')
-        sio = BytesIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'rb').read())
         sio.seek = None
         f = FileWrapper(fobj=sio)
         self.assertFalse(f.is_seekable())
@@ -537,7 +544,7 @@ class TestCpio(OscTest):
         os.mkdir(dest)
         fname = self.fixture_file('new_ascii_reader3.cpio')
         st = os.stat(fname)
-        sio = BytesIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'rb').read())
         f = FileWrapper(fobj=sio)
         archive_reader = NewAsciiReader(f)
         # copyin file foo
@@ -574,12 +581,17 @@ class TestCpio(OscTest):
         sio = BytesIO()
         archive_file = archive_reader.next_file()
         archive_file.copyin(sio)
-        self.assertEqual(sio.getvalue(), 'file foo\n')
+        self.assertEqual(sio.getvalue(), 'file foo\n'.encode(
+            sys.getdefaultencoding())
+                         )
         # copyin file foobar
         sio = BytesIO()
         archive_file = archive_reader.next_file()
         archive_file.copyin(sio)
-        self.assertEqual(sio.getvalue(), 'This is file\nbar.\n')
+        self.assertEqual(
+            sio.getvalue(),
+            'This is file\nbar.\n'.encode(sys.getdefaultencoding())
+        )
 
     def test18(self):
         """test NewAsciiWriter's append method"""
@@ -599,7 +611,7 @@ class TestCpio(OscTest):
         f = FileWrapper(fobj=sio)
         archive_reader = NewAsciiReader(f)
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
 #        self.assertEqual(hdr.ino, 1788176)
         self.assertEqual(hdr.mode, st.st_mode)
         self.assertEqual(hdr.uid, st.st_uid)
@@ -618,7 +630,7 @@ class TestCpio(OscTest):
     def test19(self):
         """test NewAsciiWriter's append method (fobj)"""
         fname = self.fixture_file('foo')
-        sio_fobj = BytesIO(open(fname, 'r').read())
+        sio_fobj = BytesIO(open(fname, 'rb').read())
         sio = BytesIO()
         archive_writer = NewAsciiWriter(sio)
         archive_writer.append('foo', fobj=sio_fobj)
@@ -638,7 +650,7 @@ class TestCpio(OscTest):
     def test21(self):
         """test NewAsciiWriter's copyout method"""
         fname = self.fixture_file('foo')
-        sio_fobj = BytesIO(open(fname, 'r').read())
+        sio_fobj = BytesIO(open(fname, 'rb').read())
         sio = BytesIO()
         archive_writer = NewAsciiWriter(sio)
         archive_writer.append('foo', fobj=sio_fobj)
@@ -652,11 +664,15 @@ class TestCpio(OscTest):
         # write a complete cpio archive
         f = BytesIO()
         archive_writer = NewAsciiWriter(f)
-        sio = BytesIO('This is a small\ntest file.\n')
+        sio = BytesIO('This is a small\ntest file.\n'.encode(
+            sys.getdefaultencoding())
+        )
         archive_writer.append('test1', fobj=sio)
-        sio = BytesIO('Yet another\ntest file.\n')
+        sio = BytesIO('Yet another\ntest file.\n'.encode(
+            sys.getdefaultencoding())
+        )
         archive_writer.append('test2', fobj=sio)
-        sio = BytesIO('The last test file.\n')
+        sio = BytesIO('The last test file.\n'.encode(sys.getdefaultencoding()))
         archive_writer.append('last_file', fobj=sio)
         archive_writer.copyout()
         self.assertEqual(archive_writer._bytes_written, 1024)
@@ -688,7 +704,7 @@ class TestCpio(OscTest):
     def test24(self):
         """test CpioArchive class unseekable input 1"""
         fname = self.fixture_file('cpio_archive.cpio')
-        sio = BytesIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'rb').read())
         sio.seek = None
         archive = CpioArchive(fobj=sio)
         filenames = ['bar', 'file1', 'foo']
@@ -713,7 +729,7 @@ class TestCpio(OscTest):
     def test25(self):
         """test CpioArchive class unseekable input 2"""
         fname = self.fixture_file('cpio_archive.cpio')
-        sio = BytesIO(open(fname, 'r').read())
+        sio = BytesIO(open(fname, 'rb').read())
         sio.seek = None
         archive = CpioArchive(fobj=sio)
         # get the second file in the archive
@@ -771,7 +787,7 @@ class TestCpio(OscTest):
         archive_reader = NewAsciiReader(f)
         # first header is ok
         hdr = archive_reader.next_header()
-        self.assertEqual(hdr.magic, '070701')
+        self.assertEqual(hdr.magic, '070701'.encode(sys.getdefaultencoding()))
         self.assertEqual(hdr.ino, 1788112)
         self.assertEqual(hdr.mode, 33188)
         self.assertEqual(hdr.uid, 1000)
@@ -800,6 +816,7 @@ class TestCpio(OscTest):
         # next header position: 156
         f.seek(158, os.SEEK_SET)
         self.assertRaises(CpioError, archive_reader.next_header)
+
 
 if __name__ == '__main__':
     unittest.main()
