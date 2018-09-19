@@ -15,7 +15,7 @@ from osc2.core import Osc
 from osc2.remote import RWLocalFile
 from osc2.source import File, Directory, Linkinfo
 from osc2.source import Package as SourcePackage
-from osc2.util.io import copy_file
+from osc2.util._io import copy_file
 from osc2.util.listinfo import ListInfo
 from osc2.util.xml import fromstring
 from osc2.wc.base import (WorkingCopy, UpdateStateMixin, CommitStateMixin,

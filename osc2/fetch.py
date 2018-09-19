@@ -10,7 +10,7 @@ from six.moves.urllib.parse import urlparse
 from osc2.build import BuildResult
 from osc2.httprequest import HTTPError, build_url
 from osc2.remote import RORemoteFile
-from osc2.util.io import copy_file
+from osc2.util._io import copy_file
 from osc2.util.listinfo import ListInfo
 from osc2.util.notify import Notifier
 

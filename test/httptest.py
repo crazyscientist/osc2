@@ -9,7 +9,7 @@ import unittest
 import shutil
 from difflib import unified_diff
 
-from osc2.util.io import mkdtemp
+from osc2.util._io import mkdtemp
 from test.xmltest import compare_xml
 
 EXPECTED_REQUESTS = []

@@ -13,7 +13,7 @@ Example usage:
 
 import logging
 import os
-from six.moves import cStringIO
+from io import BytesIO
 
 from lxml import etree, objectify
 from six import iteritems
@@ -21,7 +21,7 @@ from six import iteritems
 from osc2.core import Osc
 from osc2.httprequest import HTTPError
 from osc2.util.xml import get_parser, fromstring, OscElement
-from osc2.util.io import copy_file, iter_read, mkstemp
+from osc2.util._io import copy_file, iter_read, mkstemp
 
 __all__ = ['RemoteModel', 'RemoteProject', 'RemotePackage', 'Request',
            'RORemoteFile', 'RWRemoteFile', 'RemotePerson', 'RemoteGroup']
@@ -649,7 +649,7 @@ class RWRemoteFile(RORemoteFile):
         if self._remote_size >= self.tmp_size or self.use_tmp:
             new_fobj = mkstemp()
         else:
-            new_fobj = cStringIO()
+            new_fobj = BytesIO()
         if read_required:
             # we read/write _everything_ (otherwise this class needs
             # a bit more logic - can be added if needed)

@@ -4,7 +4,7 @@ import sys
 import tempfile
 from six.moves import cStringIO as StringIO
 
-from osc2.util.io import TemporaryDirectory, mkdtemp, mkstemp
+from osc2.util._io import TemporaryDirectory, mkdtemp, mkstemp
 from test.osctest import OscTestCase
 
 

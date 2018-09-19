@@ -20,14 +20,19 @@ def _copy_file(fsource_obj, fdest_obj, bufsize, size,
                read_method, write_method):
     """Read from fsource_obj and write to fdest_obj"""
     write = getattr(fdest_obj, write_method)
+    print ("===DEBUG=== DEST", fdest_obj, type(fdest_obj))
+    print ("===DEBUG=== SRC", fsource_obj, type(fsource_obj))
+    print ("===DEBUG=== FOBJ", fsource_obj._fobj, type(fsource_obj._fobj))
     for data in iter_read(fsource_obj, bufsize=bufsize, size=size,
                           read_method=read_method):
+        if hasattr(data, "encode"):
+            data = data.encode(sys.stdout.encoding)
         try:
             write(data)
-        except TypeError:
-            if hasattr(data, "encode"):
-                data = data.encode(sys.getdefaultencoding())
-            write(data)
+        except Exception as e:
+            print(e)
+            print("DATA", data, type(data))
+            raise
 
 
 def copy_file(source, dest, mode=0o644, mtime=None, bufsize=8096,

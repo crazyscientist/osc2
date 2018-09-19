@@ -14,7 +14,7 @@ from lxml import etree, objectify
 from six import iteritems
 
 from osc2.source import File, Directory, Linkinfo
-from osc2.util.io import mkstemp
+from osc2.util._io import mkstemp
 from osc2.util.xml import fromstring
 from osc2.util.xpath import XPathBuilder
 from osc2.wc.base import AbstractTransactionState
@@ -564,8 +564,8 @@ def _read_file(filename):
     The returned data is stripped.
 
     """
-    with open(filename, 'r') as f:
-        return f.read().strip()
+    with open(filename, 'rb') as f:
+        return f.read().strip().decode(sys.stdout.encoding)
 
 
 def _write_storefile(path, filename, data):

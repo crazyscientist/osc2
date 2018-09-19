@@ -6,7 +6,7 @@ from osc2.wc.base import (FileConflictError, TransactionListener,
                           UpdateStateMixin)
 from osc2.wc.project import Project, ProjectUpdateState
 from osc2.wc.util import WCInconsistentError
-from osc2.util.io import mkdtemp
+from osc2.util._io import mkdtemp
 from test.osctest import OscTest
 from test.httptest import GET, PUT, POST, DELETE
 from test.wc.test_package import TL, UPLOAD_REV
@@ -481,6 +481,7 @@ class TestProject(OscTest):
         """test update (with project transaction_listener)"""
         path = self.fixture_file('prj2')
         tl = ProjectTL()
+        print("===DEBUG=== PATH", path, type(path))
         prj = Project(path, transaction_listener=[tl])
         self.assertEqual(prj._status('add'), '?')
         self.assertEqual(prj._status('abc'), 'D')

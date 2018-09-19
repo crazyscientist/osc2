@@ -2,7 +2,7 @@ import os
 import unittest
 
 from test.osctest import OscTest
-from osc2.util.io import mkdtemp
+from osc2.util._io import mkdtemp
 from osc2.wc.util import (WCFormatVersionError, wc_is_project, wc_is_package,
                           wc_read_project, wc_read_package, wc_read_apiurl,
                           WCLock, wc_parent, wc_init)

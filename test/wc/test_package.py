@@ -12,7 +12,7 @@ from osc2.wc.package import (Package, FileSkipHandler, PackageUpdateState,
                              FileCommitPolicy, UnifiedDiff, Diff)
 from osc2.wc.util import WCInconsistentError, WCFormatVersionError
 from osc2.source import Package as SourcePackage
-from osc2.util.io import mkdtemp
+from osc2.util._io import mkdtemp
 from test.osctest import OscTest
 from test.httptest import GET, PUT, POST
 

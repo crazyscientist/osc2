@@ -3,21 +3,19 @@
 import os
 import mmap
 import sys
+from io import BytesIO, StringIO
+from io import open as io_open
 from struct import pack, unpack
 from collections import namedtuple
+from chardet.universaldetector import UniversalDetector
 from six import binary_type, text_type, PY2
-from six.moves import cStringIO
 
-from osc2.util.io import copy_file, iter_read
+from osc2.util._io import copy_file, iter_read
 
 
 TRAILER = 'TRAILER!!!'
 IO_BLOCK_SIZE = 512
-
-if PY2:
-    nullbyte = "\0"
-else:
-    nullbyte = binary_type("\0", sys.getdefaultencoding())
+nullbyte = "\0"
 
 
 class CpioError(Exception):
@@ -60,9 +58,11 @@ class FileWrapper(object):
         elif fobj is not None and use_mmap:
             raise ValueError('fobj and mmap are not supported')
 
+        self._encoding = "UTF-8"
         if filename:
             self._close = True
-            self._fobj = open(filename, mode)
+            # self._fobj = open(filename, mode)
+            self._fobj = self.get_encoded_file_object(filename, mode)
             if use_mmap:
                 self._fobj = mmap.mmap(self._fobj.fileno(), 0,
                                        prot=mmap.PROT_READ)
@@ -71,6 +71,29 @@ class FileWrapper(object):
             self._fobj = fobj
         self._pos = 0
         self._peek_data = ''
+
+    def get_encoded_file_object(self, filename, mode):
+        """Returns file handle with proper encoding"""
+        if "w" in mode:
+            return io_open(filename, mode="w", encoding=sys.stdout.encoding)
+
+        detector = UniversalDetector()
+
+        with open(filename, mode="rb") as rubbish:
+            while True:
+                line = rubbish.read(100)
+                if not line:
+                    break
+                detector.feed(line)
+                if detector.done:
+                    break
+        detector.close()
+        self._encoding = detector.result.get("encoding", sys.stdout.encoding)
+        return io_open(
+            filename,
+            mode="r",
+            encoding=self._encoding
+        )
 
     def is_seekable(self):
         """Returns True if the underlying file object is seekable."""
@@ -87,7 +110,6 @@ class FileWrapper(object):
 
         """
         data = ''
-        datytape = type(data)
         if self._peek_data:
             if num >= 0:
                 data = self._peek_data[:num]
@@ -97,8 +119,9 @@ class FileWrapper(object):
                 data = self._peek_data
                 self._peek_data = ''
         tmp = self._fobj.read(num)
-        if not isinstance(tmp, text_type):
-            tmp = text_type(tmp, sys.getdefaultencoding())
+        print("===DEBUG===", self._fobj, type(self._fobj), tmp, type(tmp))
+        if isinstance(self._fobj, mmap.mmap):
+            tmp = tmp.decode(self._encoding)
         data += tmp
         self._pos += len(data)
         return data
@@ -231,7 +254,7 @@ class CpioFile(CpioEntity):
         """
         if not hasattr(dest, 'write'):
             # no file-like object
-            dest = os.path.join(dest, self.hdr.name)
+            dest = os.path.join(dest, self.hdr.name.decode(sys.stdout.encoding))
         copy_file(self, dest, mode=self.hdr.mode, mtime=self.hdr.mtime)
 
 
@@ -256,8 +279,6 @@ class CpioHeader(object):
         """
         super(CpioHeader, self).__init__()
         self.magic = magic
-        if self.magic and not isinstance(self.magic, binary_type):
-            self.magic = binary_type(self.magic, sys.getdefaultencoding())
         if not no_convert:
             data = [int(i, 16) for i in data]
         self.__dict__.update(zip(self.ENTRIES, data))
@@ -272,9 +293,7 @@ class CpioHeader(object):
         """Returns header entries a hexadecimal str (except the magic)."""
         yield self.magic
         for entry in CpioHeader.ENTRIES:
-            entry = "%08X" % int(getattr(self, entry))
-            if not isinstance(entry, binary_type):
-                entry = binary_type(entry, sys.getdefaultencoding())
+            entry = b"%08X" % int(getattr(self, entry))
             yield entry
 
 
@@ -393,7 +412,7 @@ class ArchiveWriter(object):
         """Appends the trailer"""
         st = self._create_dummy_stat(0, 0, 0, 0, 1, 0, 0, 0, 0)
         hdr = self._create_header(st, TRAILER)
-        self._write_header(hdr, cStringIO())
+        self._write_header(hdr, BytesIO())
 
 
 class NewAsciiReader(ArchiveReader):
@@ -432,13 +451,17 @@ class NewAsciiReader(ArchiveReader):
         In case of an error a CpioError is raised.
 
         """
+        print("===DEBUG===", self._fobj, type(self._fobj))
         data = self._fobj.read(NewAsciiFormat.LEN)
-        if hasattr(data, "encode"):
-            data = data.encode(sys.getdefaultencoding())
         if len(data) != NewAsciiFormat.LEN:
             msg = ("premature end of file (expected at least \'%d\' bytes)"
                    % NewAsciiFormat.LEN)
             raise CpioError(msg)
+        if hasattr(data, "encode"):
+            # Data type of 'data' can be ambiguous:
+            # - files return bytes
+            # - HTTP requests return strings
+            data = data.encode(sys.stdout.encoding)
         data = unpack(NewAsciiFormat.FORMAT, data)
         hdr = CpioHeader(data[0], data[1:])
         # read filename
@@ -514,9 +537,9 @@ class NewAsciiWriter(ArchiveWriter):
             # to know the size... (alternatively we can pass in an optional
             # filesize argument)
             data = fobj.read()
-            if data and not isinstance(data, text_type):
-                data = data.decode(sys.getdefaultencoding())
-            source = cStringIO(data)
+            if hasattr(data, "encode"):
+                data = data.encode(sys.stdout.encoding)
+            source = BytesIO(data)
             st = self._create_dummy_stat(0, 33188, 0, 0, 1, os.geteuid(),
                                          os.getegid(), len(source.getvalue()),
                                          0)
@@ -533,13 +556,11 @@ class NewAsciiWriter(ArchiveWriter):
         a file or file-like object which represents the file.
 
         """
-        print("===DEBUG===", list(hdr))
         packed_hdr = pack(NewAsciiFormat.FORMAT, *hdr)
-        self._fobj.write(packed_hdr)
-        line = hdr.name
-        if line and not isinstance(line, binary_type):
-            line = binary_type(line, sys.getdefaultencoding())
-        self._fobj.write(line + nullbyte)
+        self._fobj.write(packed_hdr.decode(getattr(
+            self._fobj, "_encoding", sys.stdout.encoding
+        )))
+        self._fobj.write(hdr.name + nullbyte)
         # write padding
         offset = NewAsciiFormat.LEN + hdr.namesize
         pad = NewAsciiFormat.calculate_padding(offset)
@@ -547,8 +568,10 @@ class NewAsciiWriter(ArchiveWriter):
             self._fobj.write(nullbyte * pad)
             self._bytes_written += pad
         for data in iter_read(source):
-            if data and not isinstance(data, binary_type):
-                data = binary_type(data, sys.getdefaultencoding())
+            if hasattr(data, "decode"):
+                data = data.decode(getattr(
+                    self._fobj, "_encoding", sys.stdout.encoding
+                ))
             self._fobj.write(data)
         # write padding
         pad = NewAsciiFormat.calculate_padding(hdr.filesize)
@@ -560,7 +583,7 @@ class NewAsciiWriter(ArchiveWriter):
 
 class NewAsciiFormat(object):
     """Provides static methods and class attributes for the new ascii format"""
-    MAGIC = '070701'
+    MAGIC = b'070701'
     # format and length of the "struct new_ascii_header" (see src/cpiohdr.h)
     FORMAT = '6s8s8s8s8s8s8s8s8s8s8s8s8s8s'
     LEN = 110

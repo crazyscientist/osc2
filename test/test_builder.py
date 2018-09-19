@@ -4,7 +4,7 @@ import unittest
 
 from osc2.builder import (Builder, su_cmd, sudo_cmd, hostarch, can_build,
                           build_helper)
-from osc2.util.io import mkstemp
+from osc2.util._io import mkstemp
 from test.osctest import OscTest
 
 

@@ -1,5 +1,5 @@
 import unittest
-from six.moves import cStringIO as StringIO
+from six import BytesIO as StringIO
 
 from lxml import etree
 
@@ -219,7 +219,7 @@ class TestBuild(OscTest):
         """test the cpio view (only some binaries + specify package)"""
         br = BuildResult('test', package='pkg', repository='repo',
                          arch='x86_64')
-        archive = br.binarylist(view='cpio', binary=['foo', 'bar'])
+        archive = br.binarylist(view='cpio', binary=[b'foo', b'bar'])
         it = iter(archive)
         archive_file = next(it)
         self.assertEqual(archive_file.read(), 'foo\n')
@@ -232,9 +232,9 @@ class TestBuild(OscTest):
         """get the logfile"""
         br = BuildResult('test', package='osc', repository='repo', arch='i586')
         log = br.log()
-        self.assertEqual(log.read(), 'logfile')
+        self.assertEqual(log.read(), b'logfile')
         log.seek(3)
-        self.assertEqual(log.read(), 'file')
+        self.assertEqual(log.read(), b'file')
 
     def test_logfile2(self):
         """try to get logfile with insufficient arguments (package missing)"""

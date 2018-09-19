@@ -1,1 +1,1 @@
-__all__ = ['xml', 'io', 'xpath', 'cpio']
+__all__ = ['xml', '_io', 'xpath', 'cpio']

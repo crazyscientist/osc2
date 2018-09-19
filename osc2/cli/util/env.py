@@ -5,7 +5,7 @@ import subprocess
 import os
 
 from osc2.cli.cli import UserAbort
-from osc2.util.io import copy_file, mkstemp
+from osc2.util._io import copy_file, mkstemp
 
 
 def run_pager(source, pager='less', suffix=''):

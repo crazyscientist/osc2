@@ -2,13 +2,13 @@
 
 To access the remote build data use the class BuildResult.
 """
+from io import BytesIO
 import sys
-from six.moves import cStringIO as StringIO
 
 from lxml import etree
 
 from osc2.remote import RORemoteFile, RWRemoteFile
-from osc2.util.io import copy_file
+from osc2.util._io import copy_file
 from osc2.util.xml import fromstring, OscElement
 from osc2.util.cpio import CpioArchive
 from osc2.core import Osc
@@ -343,10 +343,12 @@ class BuildInfo(object):
         (that is it has a write method).
 
         """
-        xml_data = etree.tostring(self._xml, pretty_print=True)
-        if hasattr(xml_data, "decode"):
-            xml_data = xml_data.decode(sys.getdefaultencoding())
-        sio = StringIO(xml_data)
+        xml_data = etree.tostring(
+            self._xml,
+            pretty_print=True,
+            encoding="unicode"
+        )
+        sio = BytesIO(xml_data.encode(sys.stdout.encoding))
         copy_file(sio, dest)
 
     def __getattr__(self, name):
